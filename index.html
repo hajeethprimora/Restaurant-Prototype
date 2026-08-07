@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Flame Dine – Fresh food, faster than fire</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="style/main.css" />
+</head>
+<body>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 1: LANDING (QR SCAN) -->
+    <!-- ============================================================ -->
+    <div id="page-landing">
+        <div class="text-center max-w-sm mx-auto w-full">
+            <div class="landing-icon">
+                <i class="fas fa-fire"></i>
+            </div>
+            <h1 class="landing-title">Flame Dine</h1>
+            <p class="text-[#757575] mt-1 text-sm font-medium tracking-wide">Fresh food, faster than fire</p>
+            <div id="qrScanArea" class="qr-scan-area">
+                <i class="fas fa-qrcode"></i>
+                <p class="text-sm text-[#888] mt-3 font-medium">Scan table QR to start</p>
+            </div>
+            <button id="scanButton" class="mt-8 w-full bg-fire text-white font-bold py-4 rounded-2xl shadow-xl shadow-red-500/30 hover:bg-fire-dark transition active:scale-[0.98] text-base tracking-wide">
+                <i class="fas fa-camera mr-2"></i> Scan QR Code
+            </button>
+            <p class="text-xs text-[#aaa] mt-4">Tap the button above to simulate scanning</p>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 2: HOME (MENU) -->
+    <!-- ============================================================ -->
+    <div id="page-menu">
+        <div class="app-header">
+            <div class="top-row">
+                <div class="location">
+                    <span class="restaurant-name">Flame Dine</span>
+                    <span class="table-badge">Table 5</span>
+                </div>
+                <div id="headerOrderTracker" class="header-tracker-btn">
+                    <i class="fas fa-fire text-sm mr-1"></i> Track Order
+                </div>
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search text-[#666]"></i>
+                <input type="text" id="searchInput" placeholder="Search for dishes..."  />
+            </div>
+        </div>
+
+        <div class="home-layout">
+            <div class="category-sidebar" id="categorySidebar"></div>
+            <div class="product-grid-area" id="productGridArea">
+
+                <!-- PREPARING TOAST - with AVATARS (round images) -->
+                <div class="preparing-toast" id="preparingToast">
+                    <!-- PREPARING SECTION -->
+                    <div class="prep-section" id="prepSection">
+                        <span class="fire-icon"><i class="fas fa-fire"></i></span>
+                        <div class="status-info">
+                            <span class="orders-text"><span class="highlight" id="prepCount">0</span> preparing</span>
+                        </div>
+                        <div class="avatar-list" id="orderAvatars"></div>
+                    </div>
+                    
+                    <!-- DIVIDER LINE -->
+                    <div class="toast-divider" id="toastDivider"></div>
+                    
+                    <!-- READY SECTION -->
+                    <div class="ready-section" id="readySection">
+                        <span class="ready-icon"><i class="fas fa-bell"></i></span>
+                        <div class="status-info">
+                            <span class="ready-text"><span class="highlight" id="readyCount">0</span> ready!</span>
+                            <span class="ready-subtext">Pick up at counter</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="menuGrid" class="grid grid-cols-2 gap-3"></div>
+            </div>
+        </div>
+
+        <!-- CART BAR - 75/25 SPLIT -->
+        <div id="cartBar" class="cart-bar">
+            <div class="cart-status" >
+                <span class="badge" id="cartBarBadge">0</span>
+                <div class="details">
+                    <div class="items" id="cartBarItems">0 items</div>
+                    <div class="total">₹<span id="cartBarTotal">0</span></div>
+                </div>
+            </div>
+            <div class="cart-action">
+                <button class="action-btn" id="viewCartBtn">View Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 3: CART -->
+    <!-- ============================================================ -->
+    <div id="page-cart">
+        <div class="cart-header">
+            <div class="back-row">
+                <button class="back-btn" id="cartBackBtn"><i class="fas fa-arrow-left"></i></button>
+                <h1>Your Cart</h1>
+                <span class="item-count" id="cartItemCount">0 items</span>
+            </div>
+        </div>
+        <div class="cart-content" id="cartContent"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 4: TRACKER -->
+    <!-- ============================================================ -->
+    <div id="page-tracker">
+        <div class="app-header" style="position:sticky; top:0; z-index:10;">
+            <div class="top-row">
+                <div class="location" style="cursor:pointer;" id="backToMenuBtn">
+                    <i class="fas fa-arrow-left text-white"></i> <span style="color:#fff;">Order Tracker</span>
+                </div>
+                <div></div>
+            </div>
+        </div>
+        <div class="px-4 pt-4 max-w-md mx-auto pb-8">
+            <div class="track-card text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-check-circle text-green-600 text-3xl"></i>
+                </div>
+                <h2 class="font-extrabold text-xl text-[#1A1A1A]">Order #<span id="trackOrderId">FL-1042</span></h2>
+                <p class="text-sm text-[#888] mt-1">Order placed successfully</p>
+            </div>
+            <div class="track-card">
+                <h3 class="font-bold text-sm text-[#888] uppercase tracking-wider mb-3">Dish Status</h3>
+                <div id="trackDishStatus"></div>
+            </div>
+            <div class="track-card">
+                <h3 class="font-bold text-sm text-[#888] uppercase tracking-wider mb-3">Order Summary</h3>
+                <div id="trackItems" class="space-y-2 text-sm"></div>
+                <div class="border-t border-[#f0edeb] mt-3 pt-3 flex justify-between font-bold text-base">
+                    <span>Total</span>
+                    <span class="text-fire">₹<span id="trackTotal">0</span></span>
+                </div>
+            </div>
+            <button id="orderMoreBtn" class="w-full mt-6 bg-[#1A1A1A] text-white font-bold py-4 rounded-2xl hover:bg-[#2a2a2a] transition active:scale-[0.98] text-base">
+                <i class="fas fa-utensils mr-2"></i> Order More
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 5: SUCCESS -->
+    <!-- ============================================================ -->
+    <div id="page-success">
+        <div class="success-card">
+            <div class="tick-circle">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="4 12 10 18 20 6" />
+                </svg>
+            </div>
+            <h2>Order Placed!</h2>
+            <p class="sub-text">Your order has been received</p>
+            <p class="order-id">Order #<span id="successOrderId">FL-0000</span></p>
+            <button class="btn-track" id="trackFromSuccessBtn"><i class="fas fa-receipt mr-2"></i> Track Order</button>
+            <button class="btn-order-more" id="orderMoreFromSuccessBtn"><i class="fas fa-utensils mr-2"></i> Order More</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- OVERLAY -->
+    <!-- ============================================================ -->
+    <div id="overlay" class="overlay"></div>
+
+    <!-- ============================================================ -->
+    <!-- ITEM SHEET -->
+    <!-- ============================================================ -->
+    <div id="itemSheet" class="item-sheet">
+        <div class="handle"></div>
+        <div class="sheet-header">
+            <div class="image-wrap">
+                <img id="itemSheetImg" src="" alt="dish" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div class="fallback-emoji" style="display:none;">🍗</div>
+            </div>
+            <div class="info">
+                <div class="name" id="itemSheetName">Butter Chicken</div>
+                <div class="desc" id="itemSheetDesc" style="display: none;"></div>
+                <div class="price" id="itemSheetPrice">₹349</div>
+            </div>
+            <button class="close" id="closeItemSheetBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="mt-4">
+            <label class="text-sm font-semibold text-[#888] block mb-1">Special Instructions</label>
+            <textarea id="itemNote" class="w-full border border-[#eee] rounded-xl p-3 text-sm resize-none focus:ring-2 focus:ring-fire outline-none" rows="2" placeholder="e.g. Less spicy, extra cheese..."></textarea>
+        </div>
+        <div class="mt-4">
+            <label class="text-sm font-semibold text-[#888] block mb-2">Quantity</label>
+            <div class="flex items-center gap-4">
+                <button id="itemSheetMinus" class="w-10 h-10 rounded-full bg-[#f5f3f0] text-xl font-bold hover:bg-[#e8e5e2] transition">−</button>
+                <span class="text-xl font-bold min-w-[32px] text-center" id="itemSheetQty">1</span>
+                <button id="itemSheetPlus" class="w-10 h-10 rounded-full bg-fire text-white text-xl font-bold hover:bg-fire-dark transition shadow-lg shadow-red-500/25">+</button>
+            </div>
+        </div>
+        <button id="addFromSheetBtn" class="w-full mt-6 bg-fire text-white font-bold py-4 rounded-2xl shadow-xl shadow-red-500/30 hover:bg-fire-dark transition active:scale-[0.98] text-base">
+            <i class="fas fa-plus mr-2"></i> Add to Cart
+        </button>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FLOATING PREPARING TOAST -->
+    <!-- ============================================================ -->
+    <div id="preparingFloating" class="preparing-floating">
+        <span class="fire-icon"><i class="fas fa-fire"></i></span>
+        <span><span class="highlight">3</span> preparing</span>
+        <div class="avatar-list">
+            <span class="avatar">1</span>
+            <span class="avatar">2</span>
+            <span class="avatar">3</span>
+        </div>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT -->
+    <!-- ============================================================ -->
+    <script src="scripts/data.js" defer></script>
+    <script src="scripts/app.js" defer></script>
+</body>
+</html>
