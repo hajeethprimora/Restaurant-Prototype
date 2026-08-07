@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Dine‑In Admin Prototype</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="style/admin.css" />
+</head>
+<body>
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="sidebar">
+        <div class="logo"><i class="fas fa-utensils"></i> Softnix<span>.</span><span class="badge-version">v2.0</span></div>
+
+        <button class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+        <button class="nav-item" data-page="billing"><i class="fas fa-receipt"></i><span>Billing</span></button>
+        <button class="nav-item" data-page="menu"><i class="fas fa-utensils"></i><span>Menu</span></button>
+        <button class="nav-item" data-page="stations"><i class="fas fa-layer-group"></i><span>Stations</span></button>
+        <button class="nav-item" data-page="tables"><i class="fas fa-table"></i><span>Tables</span></button>
+        <button class="nav-item" data-page="staff"><i class="fas fa-users"></i><span>Staff</span></button>
+
+        <div class="divider"></div>
+        <button class="nav-item" data-page="print-settings"><i class="fas fa-print"></i><span>Print Settings</span><span class="badge-version" style="background:#1e293b;color:#f59e0b;">Phase 2</span></button>
+        <button class="nav-item logout" data-page="logout" style="color:#f87171;"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="main">
+
+        <!-- ========== DASHBOARD ========== -->
+        <section id="page-dashboard" class="page active">
+            <div class="page-header">
+                <div><h1>Dashboard</h1><div class="sub">Branch: The Grand Dine &middot; <span id="dateDisplay"></span></div></div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                    <div class="branch-selector" style="display:flex;align-items:center;gap:8px;background:#fff;padding:6px 14px 6px 16px;border-radius:10px;border:1px solid #e9edf4;font-size:14px;font-weight:500;cursor:pointer;" onclick="alert('Switch branch')">
+                        <span>🏢 The Grand Dine</span><i class="fas fa-chevron-down" style="color:#94a3b8;font-size:12px;"></i>
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="alert('Refreshing data...')"><i class="fas fa-sync"></i> Refresh</button>
+                    <button class="btn btn-primary btn-sm" onclick="alert('Download report')"><i class="fas fa-file-pdf"></i> Report</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card"><div class="label"><i class="fas fa-dollar-sign"></i> Revenue Today</div><div class="value">$1,284</div><div class="change up"><i class="fas fa-arrow-up"></i> +12.5% vs yesterday</div></div>
+                <div class="stat-card"><div class="label"><i class="fas fa-door-open"></i> Open Sessions</div><div class="value">7</div><div class="change down"><i class="fas fa-arrow-down"></i> -2 from peak hour</div></div>
+                <div class="stat-card"><div class="label"><i class="fas fa-clock"></i> Avg Prep Time</div><div class="value">12.4 <span style="font-size:16px;font-weight:400;">min</span></div><div class="change up"><i class="fas fa-arrow-up"></i> +8% faster this week</div></div>
+                <div class="stat-card"><div class="label"><i class="fas fa-chair"></i> Table Turnover</div><div class="value">3.2 <span style="font-size:16px;font-weight:400;">/day</span></div><div class="change up"><i class="fas fa-arrow-up"></i> +0.4 vs last week</div></div>
+                <div class="stat-card"><div class="label"><i class="fas fa-star"></i> Avg Rating</div><div class="value">4.8 <span style="font-size:16px;font-weight:400;">★</span></div><div class="change up"><i class="fas fa-arrow-up"></i> +0.2 this month</div></div>
+                <div class="stat-card"><div class="label"><i class="fas fa-users"></i> Total Staff</div><div class="value">14</div><div class="change" style="color:#64748b;">2 on leave today</div></div>
+            </div>
+
+            <div class="grid-2col">
+                <div class="card">
+                    <div class="card-title"><span><i class="fas fa-chart-line" style="color:#2563eb;margin-right:6px;"></i> Revenue (Last 7 Days)</span><span class="action-link" onclick="alert('View full report')">View Full Report →</span></div>
+                    <div class="bar-chart">
+                        <div class="bar-wrapper"><div class="bar-value">$132</div><div class="bar" style="height:32px;"></div><div class="day-label">Mon</div></div>
+                        <div class="bar-wrapper"><div class="bar-value">$198</div><div class="bar" style="height:48px;"></div><div class="day-label">Tue</div></div>
+                        <div class="bar-wrapper"><div class="bar-value">$156</div><div class="bar" style="height:38px;"></div><div class="day-label">Wed</div></div>
+                        <div class="bar-wrapper"><div class="bar-value">$289</div><div class="bar" style="height:70px;"></div><div class="day-label">Thu</div></div>
+                        <div class="bar-wrapper"><div class="bar-value">$345</div><div class="bar" style="height:84px;"></div><div class="day-label">Fri</div></div>
+                        <div class="bar-wrapper"><div class="bar-value">$423</div><div class="bar" style="height:103px;"></div><div class="day-label">Sat</div></div>
+                        <div class="bar-wrapper"><div class="bar-value">$375</div><div class="bar" style="height:91px;"></div><div class="day-label">Sun</div></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:8px;"><span>📈 Total: $1,918</span><span>⬆️ +18.4% vs last week</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span><i class="fas fa-chart-pie" style="color:#f59e0b;margin-right:6px;"></i> Order Status</span><span class="action-link" onclick="alert('View all orders')">View All →</span></div>
+                    <div class="donut-container">
+                        <div class="donut"><div class="donut-inner"><span class="number">42</span><span class="label">Total Orders</span></div></div>
+                        <div class="donut-legend">
+                            <div class="legend-item"><span class="color-dot" style="background:#22c55e;"></span><span class="legend-label">Served</span><span class="legend-value">19 (45%)</span></div>
+                            <div class="legend-item"><span class="color-dot" style="background:#f59e0b;"></span><span class="legend-label">Preparing</span><span class="legend-value">11 (26%)</span></div>
+                            <div class="legend-item"><span class="color-dot" style="background:#ef4444;"></span><span class="legend-label">Pending</span><span class="legend-value">6 (14%)</span></div>
+                            <div class="legend-item"><span class="color-dot" style="background:#94a3b8;"></span><span class="legend-label">Cancelled</span><span class="legend-value">6 (14%)</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-3col">
+                <div class="card">
+                    <div class="card-title"><span><i class="fas fa-fire" style="color:#f59e0b;margin-right:6px;"></i> Top Selling</span><span class="action-link" onclick="alert('View all items')">View All →</span></div>
+                    <div class="top-item"><span class="rank">#1</span><span class="name">Spring Rolls</span><span class="sales">42 sold</span><div class="bar-bg"><div class="fill" style="width:100%;"></div></div></div>
+                    <div class="top-item"><span class="rank">#2</span><span class="name">Grilled Chicken</span><span class="sales">28 sold</span><div class="bar-bg"><div class="fill" style="width:67%;"></div></div></div>
+                    <div class="top-item"><span class="rank">#3</span><span class="name">Garlic Bread</span><span class="sales">23 sold</span><div class="bar-bg"><div class="fill" style="width:55%;"></div></div></div>
+                    <div class="top-item"><span class="rank">#4</span><span class="name">Pasta Alfredo</span><span class="sales">18 sold</span><div class="bar-bg"><div class="fill" style="width:43%;"></div></div></div>
+                    <div class="top-item"><span class="rank">#5</span><span class="name">Tiramisu</span><span class="sales">12 sold</span><div class="bar-bg"><div class="fill" style="width:29%;"></div></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span><i class="fas fa-bolt" style="color:#2563eb;margin-right:6px;"></i> Quick Actions</span></div>
+                    <div class="quick-actions">
+                        <button class="quick-action-btn" onclick="alert('Opening new order...')"><i class="fas fa-plus-circle"></i> New Order<span class="badge">7 open</span></button>
+                        <button class="quick-action-btn" onclick="alert('Managing menu...')"><i class="fas fa-utensils"></i> Manage Menu</button>
+                        <button class="quick-action-btn" onclick="alert('Staff management...')"><i class="fas fa-users"></i> Staff<span class="badge">2 on leave</span></button>
+                        <button class="quick-action-btn" onclick="alert('Generating report...')"><i class="fas fa-file-alt"></i> Daily Report</button>
+                        <button class="quick-action-btn" onclick="alert('Print settings...')"><i class="fas fa-print"></i> Print Settings<span class="badge warning">Phase 2</span></button>
+                        <button class="quick-action-btn" onclick="alert('Billing...')"><i class="fas fa-receipt"></i> Billing<span class="badge danger">4 pending</span></button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span><i class="fas fa-clock" style="color:#64748b;margin-right:6px;"></i> Recent Activity</span><span class="action-link" onclick="alert('View all activity')">View All →</span></div>
+                    <div class="activity-item"><div class="icon green"><i class="fas fa-check"></i></div><div class="content"><div class="text"><strong>Table 5</strong> order served</div><div class="time">2 min ago</div></div></div>
+                    <div class="activity-item"><div class="icon blue"><i class="fas fa-plus"></i></div><div class="content"><div class="text">New order from <strong>Table 12</strong> (3 items)</div><div class="time">8 min ago</div></div></div>
+                    <div class="activity-item"><div class="icon yellow"><i class="fas fa-clock"></i></div><div class="content"><div class="text"><strong>Table 3</strong> order delayed</div><div class="time">15 min ago</div></div></div>
+                    <div class="activity-item"><div class="icon green"><i class="fas fa-check-circle"></i></div><div class="content"><div class="text"><strong>Bill #0421</strong> settled ($84.50)</div><div class="time">22 min ago</div></div></div>
+                    <div class="activity-item"><div class="icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="content"><div class="text"><strong>Spring Rolls</strong> out of stock</div><div class="time">35 min ago</div></div></div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div class="card">
+                    <div class="card-title"><span><i class="fas fa-tachometer-alt" style="color:#8b5cf6;margin-right:6px;"></i> Performance Metrics</span></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div><div style="font-size:12px;color:#94a3b8;">Peak Hour Revenue</div><div style="font-size:20px;font-weight:700;">$187</div><div style="font-size:12px;color:#64748b;">12:30 PM - 1:30 PM</div></div>
+                        <div><div style="font-size:12px;color:#94a3b8;">Busiest Station</div><div style="font-size:20px;font-weight:700;">Grill</div><div style="font-size:12px;color:#64748b;">18 orders today</div></div>
+                        <div><div style="font-size:12px;color:#94a3b8;">Avg Order Value</div><div style="font-size:20px;font-weight:700;">$28.40</div><div style="font-size:12px;color:#64748b;">+$2.10 vs last week</div></div>
+                        <div><div style="font-size:12px;color:#94a3b8;">Cancellation Rate</div><div style="font-size:20px;font-weight:700;">3.2%</div><div style="font-size:12px;color:#22c55e;">-0.8% this month</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span><i class="fas fa-calendar-day" style="color:#3b82f6;margin-right:6px;"></i> Today's Timeline</span></div>
+                    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;"><span>⏰ Peak Hour</span><span><strong>12:30 PM - 1:30 PM</strong></span></div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;"><span>🍽️ Orders Placed</span><span><strong>42</strong></span></div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;"><span>✅ Orders Completed</span><span><strong>19</strong> <span style="color:#22c55e;">(45%)</span></span></div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;"><span>⏳ In Progress</span><span><strong>17</strong></span></div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>🎯 Projected Revenue</span><span><strong style="color:#2563eb;">$1,450</strong></span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== BILLING ========== -->
+        <section id="page-billing" class="page">
+            <div class="page-header"><div><h1>Billing</h1><div class="sub">Tap a table to view its status and billing history</div></div><div class="actions"><button class="btn btn-outline"><i class="fas fa-download"></i> Export</button></div></div>
+            <div class="floor-legend">
+                <div class="legend-item"><span class="dot" style="background:#94a3b8;"></span> Available</div>
+                <div class="legend-item"><span class="dot" style="background:#f59e0b;"></span> Items ready</div>
+                <div class="legend-item"><span class="dot" style="background:#22c55e;"></span> All served</div>
+                <div class="legend-item"><span class="dot" style="background:#ef4444;"></span> Delayed</div>
+            </div>
+            <div class="table-floor-grid" id="billingFloorGrid"></div>
+        </section>
+
+        <!-- ========== BILLING HISTORY ========== -->
+        <section id="page-billing-history" class="page">
+            <div class="billing-history-header">
+                <button class="back-btn" onclick="backToBilling()"><i class="fas fa-arrow-left"></i></button>
+                <div><h1 id="billingHistoryTitle" style="font-size:24px;">Table</h1><div class="sub">Billing history for this table</div></div>
+            </div>
+            <div id="billingHistoryContent"></div>
+        </section>
+
+        <!-- ========== MENU ========== -->
+        <section id="page-menu" class="page">
+            <div class="page-header"><div><h1>Menu Management</h1><div class="sub">Categories, items, pricing, and availability</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('addCategory')"><i class="fas fa-plus"></i> Category</button></div></div>
+
+            <div class="menu-group" data-category="Starters" data-item-count="2">
+                <div class="group-header"><h3>Starters <span class="count">(2 items)</span></h3>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editCategory','Starters')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCategory('Starters',2)"><i class="fas fa-trash"></i> Delete</button>
+                        <button class="btn btn-sm btn-primary" onclick="openModal('addItem','Starters')"><i class="fas fa-plus"></i> Item</button>
+                    </div>
+                </div>
+                <div class="menu-item-row" data-item="Spring Rolls">
+                    <div class="item-info"><span class="name">Spring Rolls</span><span class="badge badge-blue">Grill</span><span class="price">$8.99</span></div>
+                    <div class="item-actions">
+                        <div class="toggle-switch active" onclick="toggleAvailability(this)"><span class="track"><span class="thumb"></span></span><span class="label">Active</span></div>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editItem','Spring Rolls','$8.99','Grill')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('reassignStation','Spring Rolls','Grill')"><i class="fas fa-arrows-left-right"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete('Item','Spring Rolls')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="menu-item-row" data-item="Garlic Bread">
+                    <div class="item-info"><span class="name">Garlic Bread</span><span class="badge badge-blue">Beverage</span><span class="price">$5.50</span></div>
+                    <div class="item-actions">
+                        <div class="toggle-switch" onclick="toggleAvailability(this)"><span class="track"><span class="thumb"></span></span><span class="label">Inactive</span></div>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editItem','Garlic Bread','$5.50','Beverage')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('reassignStation','Garlic Bread','Beverage')"><i class="fas fa-arrows-left-right"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete('Item','Garlic Bread')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-group" data-category="Main Course" data-item-count="1">
+                <div class="group-header"><h3>Main Course <span class="count">(1 item)</span></h3>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editCategory','Main Course')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCategory('Main Course',1)"><i class="fas fa-trash"></i> Delete</button>
+                        <button class="btn btn-sm btn-primary" onclick="openModal('addItem','Main Course')"><i class="fas fa-plus"></i> Item</button>
+                    </div>
+                </div>
+                <div class="menu-item-row" data-item="Grilled Chicken">
+                    <div class="item-info"><span class="name">Grilled Chicken</span><span class="badge badge-blue">Grill</span><span class="price">$16.99</span></div>
+                    <div class="item-actions">
+                        <div class="toggle-switch active" onclick="toggleAvailability(this)"><span class="track"><span class="thumb"></span></span><span class="label">Active</span></div>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editItem','Grilled Chicken','$16.99','Grill')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('reassignStation','Grilled Chicken','Grill')"><i class="fas fa-arrows-left-right"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete('Item','Grilled Chicken')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-group" data-category="Desserts" data-item-count="2">
+                <div class="group-header"><h3>Desserts <span class="count">(2 items)</span></h3>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editCategory','Desserts')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCategory('Desserts',2)"><i class="fas fa-trash"></i> Delete</button>
+                        <button class="btn btn-sm btn-primary" onclick="openModal('addItem','Desserts')"><i class="fas fa-plus"></i> Item</button>
+                    </div>
+                </div>
+                <div class="menu-item-row" data-item="Tiramisu">
+                    <div class="item-info"><span class="name">Tiramisu</span><span class="badge badge-blue">Desserts</span><span class="price">$7.50</span></div>
+                    <div class="item-actions">
+                        <div class="toggle-switch active" onclick="toggleAvailability(this)"><span class="track"><span class="thumb"></span></span><span class="label">Active</span></div>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editItem','Tiramisu','$7.50','Desserts')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('reassignStation','Tiramisu','Desserts')"><i class="fas fa-arrows-left-right"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete('Item','Tiramisu')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="menu-item-row" data-item="Brownie Sundae">
+                    <div class="item-info"><span class="name">Brownie Sundae</span><span class="badge badge-blue">Desserts</span><span class="price">$9.00</span></div>
+                    <div class="item-actions">
+                        <div class="toggle-switch" onclick="toggleAvailability(this)"><span class="track"><span class="thumb"></span></span><span class="label">Inactive</span></div>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editItem','Brownie Sundae','$9.00','Desserts')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('reassignStation','Brownie Sundae','Desserts')"><i class="fas fa-arrows-left-right"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete('Item','Brownie Sundae')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== STATIONS ========== -->
+        <section id="page-stations" class="page">
+            <div class="page-header"><div><h1>Stations</h1><div class="sub">Kitchen sections where menu items are routed</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('addStation')"><i class="fas fa-plus"></i> Station</button></div></div>
+            <div class="grid-cards">
+                <div class="card-item" data-station="Grill" data-item-count="2">
+                    <div class="card-header"><h4><i class="fas fa-fire" style="color:#f59e0b;margin-right:8px;"></i>Grill</h4><span class="badge badge-gray">2 items</span></div>
+                    <div class="card-body">Items: Spring Rolls, Grilled Chicken</div>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editStation','Grill')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteStation('Grill',2)"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="card-item" data-station="Beverage" data-item-count="1">
+                    <div class="card-header"><h4><i class="fas fa-mug-saucer" style="color:#3b82f6;margin-right:8px;"></i>Beverage</h4><span class="badge badge-gray">1 item</span></div>
+                    <div class="card-body">Items: Garlic Bread</div>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editStation','Beverage')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteStation('Beverage',1)"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="card-item" data-station="Desserts" data-item-count="2">
+                    <div class="card-header"><h4><i class="fas fa-cake" style="color:#8b5cf6;margin-right:8px;"></i>Desserts</h4><span class="badge badge-gray">2 items</span></div>
+                    <div class="card-body">Items: Tiramisu, Brownie Sundae</div>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editStation','Desserts')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteStation('Desserts',2)"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="card-empty" onclick="openModal('addStation')"><i class="fas fa-plus-circle"></i><span>Add New Station</span></div>
+            </div>
+        </section>
+
+        <!-- ========== TABLES ========== -->
+        <section id="page-tables" class="page">
+            <div class="page-header"><div><h1>Tables</h1><div class="sub">Manage tables and QR codes</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('addTable')"><i class="fas fa-plus"></i> Table</button></div></div>
+            <div class="grid-cards">
+                <div class="card-item" data-table="5">
+                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#2563eb;margin-right:8px;"></i>Table 5</h4><span class="badge badge-green">Active</span></div>
+                    <div class="card-body"><div style="font-size:12px;color:#94a3b8;font-family:monospace;word-break:break-all;">Token: a1b2c3d4-5678-90ef-ghij</div></div>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editTable','5','Active')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('regenerateQR','Table 5','a1b2c3d4-5678-90ef-ghij')"><i class="fas fa-qrcode"></i> QR</button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete('Table','Table 5')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="card-item" data-table="12">
+                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#2563eb;margin-right:8px;"></i>Table 12</h4><span class="badge badge-green">Active</span></div>
+                    <div class="card-body"><div style="font-size:12px;color:#94a3b8;font-family:monospace;word-break:break-all;">Token: z9y8x7w6-5432-10fe-dcba</div></div>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editTable','12','Active')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('regenerateQR','Table 12','z9y8x7w6-5432-10fe-dcba')"><i class="fas fa-qrcode"></i> QR</button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete('Table','Table 12')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="card-item" data-table="3">
+                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#94a3b8;margin-right:8px;"></i>Table 3</h4><span class="badge badge-red">Inactive</span></div>
+                    <div class="card-body"><div style="font-size:12px;color:#94a3b8;font-family:monospace;word-break:break-all;">Token: p3q4r5s6-7890-12ab-cdef</div></div>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editTable','3','Inactive')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('regenerateQR','Table 3','p3q4r5s6-7890-12ab-cdef')"><i class="fas fa-qrcode"></i> QR</button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete('Table','Table 3')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="card-item" data-table="7">
+                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#2563eb;margin-right:8px;"></i>Table 7</h4><span class="badge badge-green">Active</span></div>
+                    <div class="card-body"><div style="font-size:12px;color:#94a3b8;font-family:monospace;word-break:break-all;">Token: m5n6o7p8-9012-34cd-efgh</div></div>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline" onclick="openModal('editTable','7','Active')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('regenerateQR','Table 7','m5n6o7p8-9012-34cd-efgh')"><i class="fas fa-qrcode"></i> QR</button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete('Table','Table 7')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="card-empty" onclick="openModal('addTable')"><i class="fas fa-plus-circle"></i><span>Add New Table</span></div>
+            </div>
+        </section>
+
+        <!-- ========== STAFF ========== -->
+        <section id="page-staff" class="page">
+            <div class="page-header"><div><h1>Staff Management</h1><div class="sub">Assign roles and permissions</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('assignRole')"><i class="fas fa-user-plus"></i> Assign Role</button></div></div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Branch</th><th>Action</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Rajesh Kumar</strong></td><td>rajesh@softnix.com</td><td><span class="badge badge-purple">Admin</span></td><td>The Grand Dine</td><td><button class="btn btn-sm btn-danger" onclick="confirmDelete('Role','Rajesh Kumar')">Remove</button></td></tr>
+                        <tr><td><strong>Priya Sharma</strong></td><td>priya@softnix.com</td><td><span class="badge badge-green">Server</span></td><td>The Grand Dine</td><td><button class="btn btn-sm btn-danger" onclick="confirmDelete('Role','Priya Sharma')">Remove</button></td></tr>
+                        <tr><td><strong>Vikram Singh</strong></td><td>vikram@softnix.com</td><td><span class="badge badge-blue">Kitchen Staff</span></td><td>The Grand Dine</td><td><button class="btn btn-sm btn-danger" onclick="confirmDelete('Role','Vikram Singh')">Remove</button></td></tr>
+                        <tr><td><strong>Ananya Reddy</strong></td><td>ananya@softnix.com</td><td><span class="badge badge-blue">Kitchen Staff</span></td><td>The Grand Dine</td><td><button class="btn btn-sm btn-danger" onclick="confirmDelete('Role','Ananya Reddy')">Remove</button></td></tr>
+                        <tr><td><strong>Deepak Gupta</strong></td><td>deepak@softnix.com</td><td><span class="badge badge-green">Server</span></td><td>The Grand Dine</td><td><button class="btn btn-sm btn-danger" onclick="confirmDelete('Role','Deepak Gupta')">Remove</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== PRINT SETTINGS ========== -->
+        <section id="page-print-settings" class="page">
+            <div class="page-header"><div><h1>Print Settings</h1><div class="sub">Configure kitchen notification mode <span class="badge badge-yellow">Phase 2</span></div></div></div>
+            <div style="background:#fff;border-radius:12px;border:1px solid #e9edf4;padding:32px;text-align:center;max-width:600px;margin:0 auto;">
+                <i class="fas fa-print" style="font-size:56px;color:#94a3b8;margin-bottom:16px;"></i>
+                <h3 style="margin-bottom:8px;">Coming Soon: Paper Printing</h3>
+                <p style="color:#64748b;max-width:400px;margin:0 auto 16px;">In Phase 2, you'll be able to switch between <strong>Digital</strong>, <strong>Paper</strong>, or <strong>Both</strong> modes and configure printers per station.</p>
+                <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+                    <span class="badge badge-blue">Current Mode: <strong>Digital</strong></span>
+                    <span class="badge badge-gray">0 printers configured</span>
+                </div>
+                <div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;text-align:left;">
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e9edf4;"><span>Station</span><span>Printer</span><span>Status</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;color:#94a3b8;font-style:italic;"><span>Grill</span><span>—</span><span>Not configured</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;color:#94a3b8;font-style:italic;"><span>Beverage</span><span>—</span><span>Not configured</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;color:#94a3b8;font-style:italic;"><span>Desserts</span><span>—</span><span>Not configured</span></div>
+                </div>
+                <button class="btn btn-primary" style="margin-top:20px;" onclick="alert('🚧 Print configuration will be available in Phase 2.')"><i class="fas fa-cog"></i> Configure Printers</button>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ═══ MODAL OVERLAY ═══ -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modalContent"></div>
+    </div>
+
+    <script src="scripts/admin.js" defer></script>
+</body>
+</html>
