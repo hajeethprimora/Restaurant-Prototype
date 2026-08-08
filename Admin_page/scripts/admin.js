@@ -10,7 +10,6 @@ const pages = {
     billing: document.getElementById('page-billing'),
     'billing-history': document.getElementById('page-billing-history'),
     menu: document.getElementById('page-menu'),
-    stations: document.getElementById('page-stations'),
     tables: document.getElementById('page-tables'),
     staff: document.getElementById('page-staff'),
     'print-settings': document.getElementById('page-print-settings'),
@@ -23,7 +22,6 @@ function navigateTo(pageId) {
     closeModal();
     if (pageId === 'billing') renderBillingFloor();
     if (pageId === 'menu') renderAdminMenu();
-    if (pageId === 'stations') renderAdminStations();
     if (pageId === 'tables') renderAdminTables();
     if (pageId === 'staff') renderAdminStaff();
 }
@@ -51,6 +49,7 @@ function openModal(templateKey, ...args) {
     if (!template) { console.warn('Unknown modal:', templateKey); return; }
     modalContent.innerHTML = typeof template === 'function' ? template(...args) : template;
     modalOverlay.classList.add('active');
+    wireCombos();
 }
 window.openModal = openModal;
 
@@ -150,30 +149,17 @@ const MODAL_TEMPLATES = {
         <div class="modal-header"><h3>Add Menu Item</h3><button class="close" onclick="closeModal()">&times;</button></div>
         <div class="form-group"><label>Item Name</label><input type="text" id="itemNameInput" placeholder="e.g. Pasta Alfredo" /></div>
         <div class="form-group"><label>Price (₹)</label><input type="number" id="itemPriceInput" placeholder="199" /></div>
-        <div class="form-group"><label>Category</label><select id="itemCatSelect"><option>${category || 'Starters'}</option><option>Starters</option><option>Main Course</option><option>Beverages</option><option>Desserts</option></select></div>
-        <div class="form-group"><label>Kitchen Station</label><select id="itemStationSelect"><option>Grill</option><option>Beverage</option><option>Desserts</option><option>Main Kitchen</option></select></div>
+        <div class="form-group"><label>Category</label>${renderComboField('categoryCombo', 'category', category)}</div>
+        <div class="form-group"><label>Kitchen Station</label>${renderComboField('stationCombo', 'station', '')}</div>
         <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeSaveItem()">Save Item</button></div>
     `,
 
     reassignStation: (itemId, currentStation) => `
         <div class="modal-header"><h3>Reassign Station</h3><button class="close" onclick="closeModal()">&times;</button></div>
         <div style="background:#f8fafc;padding:12px;border-radius:8px;margin-bottom:16px;">Currently routed to <span class="badge badge-blue">${currentStation}</span></div>
-        <div class="form-group"><label>New Station</label>
-            <select id="newStationSelect">
-                <option value="Grill">Grill</option>
-                <option value="Beverage">Beverage</option>
-                <option value="Desserts">Desserts</option>
-                <option value="Main Kitchen">Main Kitchen</option>
-            </select>
-        </div>
+        <div class="form-group"><label>New Station</label>${renderComboField('stationCombo', 'station', currentStation)}</div>
         <div class="alert-info"><i class="fas fa-info-circle"></i><span>Takes effect for future orders.</span></div>
         <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeReassignStation(${itemId})">Reassign</button></div>
-    `,
-
-    addStation: () => `
-        <div class="modal-header"><h3>Add Kitchen Station</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>Station Name</label><input type="text" id="stationNameInput" placeholder="e.g. Bakery Station" /></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeSaveStation()">Save Station</button></div>
     `,
 
     addTable: () => `
@@ -196,6 +182,135 @@ const MODAL_TEMPLATES = {
         <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeAssignRole()">Save Role</button></div>
     `
 };
+
+// ─── CREATABLE COMBO DROPDOWN (Station / Category) ────────────
+// Lists existing values with a trailing "+ Add new" option that lets
+// the user type a brand new station/category inline, without leaving the form.
+function comboSourceList(kind) {
+    return kind === 'station'
+        ? window.FlameDineStore.getStations().map(s => s.name)
+        : window.FlameDineStore.getCategories();
+}
+
+function renderComboField(comboId, kind, selectedValue) {
+    const label = selectedValue || `Select ${kind}`;
+    return `
+        <div class="combo-select" id="${comboId}" data-kind="${kind}">
+            <button type="button" class="combo-trigger" onclick="toggleCombo('${comboId}')">
+                <span class="combo-value" id="${comboId}_valueLabel">${label}</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="combo-panel hidden" id="${comboId}_panel">
+                <div class="combo-options" id="${comboId}_options"></div>
+                <div class="combo-add-row" id="${comboId}_addRow">
+                    <button type="button" class="combo-add-btn" onclick="startComboAdd('${comboId}')"><i class="fas fa-plus"></i> Add new ${kind}</button>
+                </div>
+            </div>
+            <input type="hidden" id="${comboId}_hidden" value="${selectedValue || ''}" />
+        </div>
+    `;
+}
+
+function wireCombos() {
+    document.querySelectorAll('.combo-select').forEach(el => {
+        renderComboOptions(el.id);
+    });
+}
+
+function renderComboOptions(comboId) {
+    const el = document.getElementById(comboId);
+    const optionsEl = document.getElementById(comboId + '_options');
+    const hidden = document.getElementById(comboId + '_hidden');
+    if (!el || !optionsEl) return;
+    const kind = el.dataset.kind;
+    const list = comboSourceList(kind);
+    const selected = hidden ? hidden.value : '';
+
+    optionsEl.innerHTML = list.map(opt => `
+        <div class="combo-option ${opt === selected ? 'selected' : ''}" onclick="selectComboOption('${comboId}', '${opt.replace(/'/g, "\\'")}')">
+            <span>${opt}</span>${opt === selected ? '<i class="fas fa-check"></i>' : ''}
+        </div>
+    `).join('') || `<div class="combo-empty">No ${kind}s yet — add one below.</div>`;
+}
+
+function toggleCombo(comboId) {
+    document.querySelectorAll('.combo-panel').forEach(p => {
+        if (p.id !== comboId + '_panel') p.classList.add('hidden');
+    });
+    const panel = document.getElementById(comboId + '_panel');
+    if (panel) panel.classList.toggle('hidden');
+}
+
+function selectComboOption(comboId, value) {
+    const hidden = document.getElementById(comboId + '_hidden');
+    const label = document.getElementById(comboId + '_valueLabel');
+    if (hidden) hidden.value = value;
+    if (label) label.textContent = value;
+    renderComboOptions(comboId);
+    const panel = document.getElementById(comboId + '_panel');
+    if (panel) panel.classList.add('hidden');
+}
+
+function startComboAdd(comboId) {
+    const el = document.getElementById(comboId);
+    const addRow = document.getElementById(comboId + '_addRow');
+    if (!el || !addRow) return;
+    const kind = el.dataset.kind;
+    addRow.innerHTML = `
+        <input type="text" class="combo-add-input" id="${comboId}_newInput" placeholder="New ${kind} name" />
+        <button type="button" class="combo-add-confirm" onclick="confirmComboAdd('${comboId}')"><i class="fas fa-check"></i></button>
+        <button type="button" class="combo-add-cancel" onclick="cancelComboAdd('${comboId}')"><i class="fas fa-times"></i></button>
+    `;
+    const input = document.getElementById(comboId + '_newInput');
+    if (input) {
+        input.focus();
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); confirmComboAdd(comboId); }
+            if (e.key === 'Escape') { e.preventDefault(); cancelComboAdd(comboId); }
+        });
+    }
+}
+
+function cancelComboAdd(comboId) {
+    const el = document.getElementById(comboId);
+    const addRow = document.getElementById(comboId + '_addRow');
+    if (!el || !addRow) return;
+    const kind = el.dataset.kind;
+    addRow.innerHTML = `<button type="button" class="combo-add-btn" onclick="startComboAdd('${comboId}')"><i class="fas fa-plus"></i> Add new ${kind}</button>`;
+}
+
+function confirmComboAdd(comboId) {
+    const el = document.getElementById(comboId);
+    const input = document.getElementById(comboId + '_newInput');
+    if (!el || !input) return;
+    const kind = el.dataset.kind;
+    const value = input.value.trim();
+    if (!value) return;
+
+    if (kind === 'station') {
+        window.FlameDineStore.saveStation(value);
+    } else {
+        window.FlameDineStore.addCategory(value);
+    }
+
+    cancelComboAdd(comboId);
+    selectComboOption(comboId, value);
+}
+
+document.addEventListener('click', (e) => {
+    document.querySelectorAll('.combo-select').forEach(el => {
+        if (!el.contains(e.target)) {
+            const panel = document.getElementById(el.id + '_panel');
+            if (panel) panel.classList.add('hidden');
+        }
+    });
+});
+
+window.toggleCombo = toggleCombo;
+window.selectComboOption = selectComboOption;
+window.startComboAdd = startComboAdd;
+window.cancelComboAdd = cancelComboAdd;
+window.confirmComboAdd = confirmComboAdd;
 
 // ─── BILLING FLOOR & HISTORY ──────────────────────────────────
 function renderBillingFloor() {
@@ -433,9 +548,10 @@ function renderAdminMenu() {
 window.executeSaveItem = function () {
     const name = document.getElementById('itemNameInput')?.value;
     const price = document.getElementById('itemPriceInput')?.value;
-    const category = document.getElementById('itemCatSelect')?.value;
-    const station = document.getElementById('itemStationSelect')?.value;
+    const category = document.getElementById('categoryCombo_hidden')?.value;
+    const station = document.getElementById('stationCombo_hidden')?.value;
     if (!name || !price) { alert('Please enter name and price'); return; }
+    if (!category || !station) { alert('Please choose a category and a kitchen station'); return; }
 
     window.FlameDineStore.saveMenuItem({ name, price, category, station });
     closeModal();
@@ -443,7 +559,8 @@ window.executeSaveItem = function () {
 };
 
 window.executeReassignStation = function (itemId) {
-    const newStation = document.getElementById('newStationSelect')?.value;
+    const newStation = document.getElementById('stationCombo_hidden')?.value;
+    if (!newStation) { alert('Please choose a station'); return; }
     window.FlameDineStore.reassignItemStation(itemId, newStation);
     closeModal();
     renderAdminMenu();
@@ -453,50 +570,6 @@ window.executeDeleteItem = function (itemId) {
     if (confirm('Delete this menu item?')) {
         window.FlameDineStore.deleteMenuItem(itemId);
         renderAdminMenu();
-    }
-};
-
-function renderAdminStations() {
-    const stations = window.FlameDineStore.getStations();
-    const items = window.FlameDineStore.getMenuItems();
-    const container = document.getElementById('page-stations');
-    if (!container) return;
-
-    let html = `
-        <div class="page-header"><div><h1>Stations</h1><div class="sub">Kitchen sections where menu items are routed</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('addStation')"><i class="fas fa-plus"></i> Station</button></div></div>
-        <div class="grid-cards">
-    `;
-
-    stations.forEach(st => {
-        const stItems = items.filter(i => i.station === st.name);
-        html += `
-            <div class="card-item">
-                <div class="card-header"><h4><i class="fas ${st.icon || 'fa-fire'}" style="color:#f59e0b;margin-right:8px;"></i>${st.name}</h4><span class="badge badge-gray">${stItems.length} items</span></div>
-                <div class="card-body">Items: ${stItems.map(i => i.name).join(', ') || 'None assigned'}</div>
-                <div class="card-actions">
-                    <button class="btn btn-sm btn-danger" onclick="executeDeleteStation('${st.name}')"><i class="fas fa-trash"></i> Delete</button>
-                </div>
-            </div>
-        `;
-    });
-
-    html += `<div class="card-empty" onclick="openModal('addStation')"><i class="fas fa-plus-circle"></i><span>Add New Station</span></div></div>`;
-    container.innerHTML = html;
-}
-
-window.executeSaveStation = function () {
-    const name = document.getElementById('stationNameInput')?.value;
-    if (name) {
-        window.FlameDineStore.saveStation(name);
-        closeModal();
-        renderAdminStations();
-    }
-};
-
-window.executeDeleteStation = function (name) {
-    if (confirm(`Delete station "${name}"?`)) {
-        window.FlameDineStore.deleteStation(name);
-        renderAdminStations();
     }
 };
 

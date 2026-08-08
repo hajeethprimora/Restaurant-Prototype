@@ -163,6 +163,15 @@
                 const inCart = cart.find(c => c.id === item.id);
                 const qty = inCart ? inCart.qty : 0;
                 const imgUrl = getLocalImagePath(item);
+                const qtyControlHtml = qty > 0 ? `
+                    <div class="qty-stepper" data-id="${item.id}">
+                        <button class="qty-step-btn qty-step-minus" data-id="${item.id}">−</button>
+                        <span class="qty-step-value">${qty}</span>
+                        <button class="qty-step-btn qty-step-plus" data-id="${item.id}">+</button>
+                    </div>
+                ` : `
+                    <button class="add-btn" data-id="${item.id}">+</button>
+                `;
                 return `
                     <div class="product-card fade-in" data-id="${item.id}">
                         <div class="img-wrap">
@@ -173,9 +182,7 @@
                             <div class="name">${item.name}</div>
                             <div class="price-row">
                                 <span class="price">₹${item.price}</span>
-                                <button class="add-btn ${qty > 0 ? 'has-qty' : ''}" data-id="${item.id}">
-                                    ${qty > 0 ? qty : '+'}
-                                </button>
+                                ${qtyControlHtml}
                             </div>
                         </div>
                     </div>
@@ -184,7 +191,7 @@
 
             menuGrid.querySelectorAll('.product-card').forEach(card => {
                 card.addEventListener('click', function(e) {
-                    if (e.target.closest('.add-btn')) return;
+                    if (e.target.closest('.add-btn') || e.target.closest('.qty-stepper')) return;
                     const id = parseInt(this.dataset.id);
                     openItemSheet(id);
                 });
@@ -195,6 +202,22 @@
                     e.stopPropagation();
                     const id = parseInt(this.dataset.id);
                     addToCart(id);
+                });
+            });
+
+            menuGrid.querySelectorAll('.qty-step-plus').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.dataset.id);
+                    addToCart(id);
+                });
+            });
+
+            menuGrid.querySelectorAll('.qty-step-minus').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.dataset.id);
+                    removeFromCart(id);
                 });
             });
         }
@@ -450,9 +473,9 @@
             const toast = $('preparingToast');
             if (!toast) return;
 
-            if (prepCountVal > 0) {
+            if (totalActive > 0) {
                 toast.style.display = 'flex';
-                
+
                 // Update text counts
                 const prepCountEl = $('prepCount');
                 const readyCountEl = $('readyCount');
@@ -488,14 +511,14 @@
                     readySectionEl.classList.remove('pulse-green-glow');
                 }
 
-                // Generate avatars for preparing dishes
-                const preparingItems = items.filter(it => it.status === 'placed' || it.status === 'preparing');
+                // Generate avatars for dishes that are ready to be picked up (not preparing)
+                const readyItemsForAvatars = items.filter(it => it.status === 'ready');
                 let avatarHtml = '';
                 const maxShow = 3;
-                const showCount = Math.min(preparingItems.length, maxShow);
-                
+                const showCount = Math.min(readyItemsForAvatars.length, maxShow);
+
                 for (let i = 0; i < showCount; i++) {
-                    const item = preparingItems[i];
+                    const item = readyItemsForAvatars[i];
                     const imgUrl = getLocalImagePath(item);
                     avatarHtml += `
                         <div class="avatar">
@@ -504,8 +527,8 @@
                         </div>
                     `;
                 }
-                if (preparingItems.length > maxShow) {
-                    avatarHtml += `<div class="avatar more">+${preparingItems.length - maxShow}</div>`;
+                if (readyItemsForAvatars.length > maxShow) {
+                    avatarHtml += `<div class="avatar more">+${readyItemsForAvatars.length - maxShow}</div>`;
                 }
                 if (orderAvatarsEl) {
                     orderAvatarsEl.innerHTML = avatarHtml;
@@ -554,35 +577,15 @@
         // ORDER TRACKER
         // =============================================================
         function renderTracker(orderId, total) {
-            const trackOrderId = $('trackOrderId');
             const trackTotal = $('trackTotal');
-            const trackDishStatus = $('trackDishStatus');
             const trackItems = $('trackItems');
 
-            trackOrderId.textContent = orderId;
             trackTotal.textContent = total;
 
             const sortedItems = [...currentOrder.items].sort((a, b) => {
                 const order = { placed: 0, preparing: 1, ready: 2, served: 3 };
                 return (order[a.status] || 0) - (order[b.status] || 0);
             });
-
-            trackDishStatus.innerHTML = sortedItems.map(item => {
-                const statusClass = item.status;
-                const imgUrl = getLocalImagePath(item);
-                return `
-                        <div class="dish-status-item">
-                            <div class="status-item-left">
-                                <div class="tracker-item-img-wrap">
-                                    <img src="${imgUrl}" onerror="if (this.src.indexOf('unsplash.com') === -1) { this.src = getDishFallbackImage('${item.name.replace(/'/g, "\\'")}'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }" />
-                                    <div class="fallback-emoji" style="display:none;">${item.emoji}</div>
-                                </div>
-                                <span class="dish-name">${item.name} × ${item.qty}</span>
-                            </div>
-                            <span class="dish-status ${statusClass}">${statusClass.charAt(0).toUpperCase() + statusClass.slice(1)}</span>
-                        </div>
-                    `;
-            }).join('');
 
             trackItems.innerHTML = sortedItems.map(item => {
                 const imgUrl = getLocalImagePath(item);
@@ -599,12 +602,6 @@
                     </div>
                 `;
             }).join('');
-
-            const counts = { placed: 0, preparing: 0, ready: 0, served: 0 };
-            currentOrder.items.forEach(item => {
-                if (counts.hasOwnProperty(item.status)) counts[item.status]++;
-            });
-            updateTrackerStepper(counts);
 
             // Simulate status changes
             if (trackInterval) clearInterval(trackInterval);
@@ -635,57 +632,6 @@
                     updateHeaderOrderTracker();
                 }
             }, 3000);
-        }
-
-        function updateTrackerStepper(counts) {
-            const stepPlaced = $('stepPlaced');
-            const stepPreparing = $('stepPreparing');
-            const stepReady = $('stepReady');
-            const stepServed = $('stepServed');
-            const linePlaced = $('linePlaced');
-            const linePreparing = $('linePreparing');
-            const lineReady = $('lineReady');
-            const trackerGeneralBadge = $('trackerGeneralBadge');
-
-            // Reset classes
-            [stepPlaced, stepPreparing, stepReady, stepServed].forEach(el => {
-                if (el) el.className = 'step';
-            });
-            if (stepReady) stepReady.classList.add('ready-step');
-            if (stepServed) stepServed.classList.add('served-step');
-            [linePlaced, linePreparing, lineReady].forEach(el => {
-                if (el) el.className = 'step-line';
-            });
-
-            if (counts.served === currentOrder.items.length) {
-                [stepPlaced, stepPreparing, stepReady, stepServed].forEach(el => el && el.classList.add('active'));
-                [linePlaced, linePreparing, lineReady].forEach(el => el && el.classList.add('active', 'ready-line'));
-                if (trackerGeneralBadge) {
-                    trackerGeneralBadge.textContent = 'Served';
-                    trackerGeneralBadge.className = 'status-badge-tracker served';
-                }
-            } else if (counts.ready > 0 && counts.preparing === 0 && counts.placed === 0) {
-                [stepPlaced, stepPreparing, stepReady].forEach(el => el && el.classList.add('active'));
-                [linePlaced, linePreparing].forEach(el => el && el.classList.add('active', 'ready-line'));
-                if (trackerGeneralBadge) {
-                    trackerGeneralBadge.textContent = 'Ready!';
-                    trackerGeneralBadge.className = 'status-badge-tracker ready';
-                }
-            } else if (counts.preparing > 0 || counts.placed > 0) {
-                if (stepPlaced) stepPlaced.classList.add('active');
-                if (stepPreparing) stepPreparing.classList.add('active');
-                if (linePlaced) linePlaced.classList.add('active');
-                if (trackerGeneralBadge) {
-                    trackerGeneralBadge.textContent = 'Preparing';
-                    trackerGeneralBadge.className = 'status-badge-tracker preparing';
-                }
-            } else {
-                if (stepPlaced) stepPlaced.classList.add('active');
-                if (trackerGeneralBadge) {
-                    trackerGeneralBadge.textContent = 'Placed';
-                    trackerGeneralBadge.className = 'status-badge-tracker placed';
-                }
-            }
         }
 
         // =============================================================

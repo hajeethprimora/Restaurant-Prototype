@@ -89,18 +89,18 @@
                         <div class="status-info">
                             <span class="orders-text"><span class="highlight" id="prepCount">0</span></span>
                         </div>
-                        <div class="avatar-list" id="orderAvatars"></div>
                     </div>
-                    
+
                     <!-- DIVIDER LINE -->
                     <div class="toast-divider" id="toastDivider"></div>
-                    
+
                     <!-- READY SECTION -->
                     <div class="ready-section" id="readySection">
                         <span class="ready-icon"><i class="fas fa-bell"></i></span>
                         <div class="status-info">
                             <span class="ready-text"><span class="highlight" id="readyCount">0</span> ready!</span>
                         </div>
+                        <div class="avatar-list" id="orderAvatars"></div>
                     </div>
                 </div>
 
@@ -150,38 +150,6 @@
             </div>
         </div>
         <div class="px-4 pt-4 max-w-md mx-auto pb-8">
-            <div class="track-card">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-extrabold text-lg text-white">Order #<span id="trackOrderId">FL-1042</span></h2>
-                    <span class="status-badge-tracker" id="trackerGeneralBadge">Placed</span>
-                </div>
-                <!-- Visual Stepper Progress Map -->
-                <div class="stepper" id="trackerStepper">
-                    <div class="step active" id="stepPlaced">
-                        <div class="circle"><i class="fas fa-receipt"></i></div>
-                        <div class="label">Placed</div>
-                    </div>
-                    <div class="step-line" id="linePlaced"></div>
-                    <div class="step" id="stepPreparing">
-                        <div class="circle"><i class="fas fa-fire"></i></div>
-                        <div class="label">Preparing</div>
-                    </div>
-                    <div class="step-line" id="linePreparing"></div>
-                    <div class="step" id="stepReady">
-                        <div class="circle"><i class="fas fa-bell"></i></div>
-                        <div class="label">Ready!</div>
-                    </div>
-                    <div class="step-line" id="lineReady"></div>
-                    <div class="step" id="stepServed">
-                        <div class="circle"><i class="fas fa-check-double"></i></div>
-                        <div class="label">Served</div>
-                    </div>
-                </div>
-            </div>
-            <div class="track-card">
-                <h3 class="font-bold text-sm text-[#888] uppercase tracking-wider mb-3">Dish Status</h3>
-                <div id="trackDishStatus"></div>
-            </div>
             <div class="track-card">
                 <h3 class="font-bold text-sm text-[#888] uppercase tracking-wider mb-3">Order Summary</h3>
                 <div id="trackItems" class="space-y-2 text-sm"></div>
