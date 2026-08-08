@@ -68,11 +68,19 @@
                 status: 'OPEN',
                 createdAt: new Date(Date.now() - 40 * 60000).toISOString(),
                 currentRound: 1
+            },
+            {
+                id: 'sess_t9_1003',
+                tableNumber: 9,
+                status: 'OPEN',
+                createdAt: new Date(Date.now() - 32 * 60000).toISOString(),
+                currentRound: 1
             }
         ],
         orders: [
             { id: 'ord_1001', sessionId: 'sess_t5_1001', tableNumber: 5, orderCode: 'FL-1042', createdAt: new Date(Date.now() - 25 * 60000).toISOString() },
-            { id: 'ord_1002', sessionId: 'sess_t12_1002', tableNumber: 12, orderCode: 'FL-1038', createdAt: new Date(Date.now() - 40 * 60000).toISOString() }
+            { id: 'ord_1002', sessionId: 'sess_t12_1002', tableNumber: 12, orderCode: 'FL-1038', createdAt: new Date(Date.now() - 40 * 60000).toISOString() },
+            { id: 'ord_1003', sessionId: 'sess_t9_1003', tableNumber: 9, orderCode: 'FL-1050', createdAt: new Date(Date.now() - 32 * 60000).toISOString() }
         ],
         orderItems: [
             {
@@ -159,6 +167,58 @@
                 note: '',
                 createdAt: new Date(Date.now() - 35 * 60000).toISOString(),
                 updatedAt: new Date(Date.now() - 15 * 60000).toISOString()
+            },
+            // --- Table 9: demonstrates the full serving-urgency range on one ticket ---
+            {
+                id: 'item_106',
+                orderId: 'ord_1003',
+                sessionId: 'sess_t9_1003',
+                tableNumber: 9,
+                menuItemId: 9,
+                name: 'Chicken Wings',
+                qty: 2,
+                price: 249,
+                station: 'Grill',
+                status: 'placed',
+                round_no: 1,
+                claimedBy: null,
+                note: 'No sauce, extra spicy',
+                createdAt: new Date(Date.now() - 32 * 60000).toISOString(),
+                updatedAt: new Date(Date.now() - 32 * 60000).toISOString()
+            },
+            {
+                id: 'item_107',
+                orderId: 'ord_1003',
+                sessionId: 'sess_t9_1003',
+                tableNumber: 9,
+                menuItemId: 5,
+                name: 'Fresh Lime Soda',
+                qty: 1,
+                price: 89,
+                station: 'Beverage',
+                status: 'claimed',
+                round_no: 1,
+                claimedBy: 'Ananya Reddy',
+                note: '',
+                createdAt: new Date(Date.now() - 11 * 60000).toISOString(),
+                updatedAt: new Date(Date.now() - 4 * 60000).toISOString()
+            },
+            {
+                id: 'item_108',
+                orderId: 'ord_1003',
+                sessionId: 'sess_t9_1003',
+                tableNumber: 9,
+                menuItemId: 7,
+                name: 'Gulab Jamun',
+                qty: 2,
+                price: 79,
+                station: 'Desserts',
+                status: 'placed',
+                round_no: 1,
+                claimedBy: null,
+                note: '',
+                createdAt: new Date(Date.now() - 2 * 60000).toISOString(),
+                updatedAt: new Date(Date.now() - 2 * 60000).toISOString()
             }
         ],
         bills: [
@@ -594,6 +654,17 @@
             data.menuItems = data.menuItems.filter(m => m.id !== parseInt(itemId));
             this.save(data);
             this.broadcast({ type: 'MENU_UPDATED' });
+        }
+
+        // Category Management
+        addCategory(categoryName) {
+            const data = this.load();
+            if (!data.categories) data.categories = [];
+            if (!data.categories.includes(categoryName)) {
+                data.categories.push(categoryName);
+                this.save(data);
+                this.broadcast({ type: 'CATEGORIES_UPDATED' });
+            }
         }
 
         // Station Management

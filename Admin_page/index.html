@@ -21,7 +21,6 @@
         <button class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
         <button class="nav-item" data-page="billing"><i class="fas fa-receipt"></i><span>Billing</span></button>
         <button class="nav-item" data-page="menu"><i class="fas fa-utensils"></i><span>Menu</span></button>
-        <button class="nav-item" data-page="stations"><i class="fas fa-layer-group"></i><span>Stations</span></button>
         <button class="nav-item" data-page="tables"><i class="fas fa-table"></i><span>Tables</span></button>
         <button class="nav-item" data-page="staff"><i class="fas fa-users"></i><span>Staff</span></button>
 
@@ -235,38 +234,6 @@
                         <button class="btn btn-sm btn-danger" onclick="confirmDelete('Item','Brownie Sundae')"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- ========== STATIONS ========== -->
-        <section id="page-stations" class="page">
-            <div class="page-header"><div><h1>Stations</h1><div class="sub">Kitchen sections where menu items are routed</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('addStation')"><i class="fas fa-plus"></i> Station</button></div></div>
-            <div class="grid-cards">
-                <div class="card-item" data-station="Grill" data-item-count="2">
-                    <div class="card-header"><h4><i class="fas fa-fire" style="color:#f59e0b;margin-right:8px;"></i>Grill</h4><span class="badge badge-gray">2 items</span></div>
-                    <div class="card-body">Items: Spring Rolls, Grilled Chicken</div>
-                    <div class="card-actions">
-                        <button class="btn btn-sm btn-outline" onclick="openModal('editStation','Grill')"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteStation('Grill',2)"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-                <div class="card-item" data-station="Beverage" data-item-count="1">
-                    <div class="card-header"><h4><i class="fas fa-mug-saucer" style="color:#3b82f6;margin-right:8px;"></i>Beverage</h4><span class="badge badge-gray">1 item</span></div>
-                    <div class="card-body">Items: Garlic Bread</div>
-                    <div class="card-actions">
-                        <button class="btn btn-sm btn-outline" onclick="openModal('editStation','Beverage')"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteStation('Beverage',1)"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-                <div class="card-item" data-station="Desserts" data-item-count="2">
-                    <div class="card-header"><h4><i class="fas fa-cake" style="color:#8b5cf6;margin-right:8px;"></i>Desserts</h4><span class="badge badge-gray">2 items</span></div>
-                    <div class="card-body">Items: Tiramisu, Brownie Sundae</div>
-                    <div class="card-actions">
-                        <button class="btn btn-sm btn-outline" onclick="openModal('editStation','Desserts')"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteStation('Desserts',2)"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-                <div class="card-empty" onclick="openModal('addStation')"><i class="fas fa-plus-circle"></i><span>Add New Station</span></div>
             </div>
         </section>
 

@@ -662,11 +662,47 @@
         .product-card .add-btn:active {
             transform: scale(0.85);
         }
-        .product-card .add-btn.has-qty {
+
+        /* Quantity stepper shown once an item is in the cart */
+        .product-card .qty-stepper {
+            display: flex;
+            align-items: center;
+            gap: 2px;
             background: #1A1A1A;
-            font-size: 14px;
-            font-weight: 700;
+            border-radius: 50px;
+            padding: 3px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            user-select: none;
+        }
+        .product-card .qty-stepper .qty-step-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .product-card .qty-stepper .qty-step-btn:active {
+            transform: scale(0.85);
+        }
+        .product-card .qty-stepper .qty-step-plus {
+            background: #E53935;
+        }
+        .product-card .qty-stepper .qty-step-minus {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .product-card .qty-stepper .qty-step-value {
+            min-width: 22px;
+            text-align: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
         }
 
         /* ============================================================ */
@@ -1132,43 +1168,6 @@
             border: 1px solid rgba(255,255,255,0.05);
             margin-bottom: 12px;
         }
-        .dish-status-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-        }
-        .dish-status-item .dish-name {
-            font-weight: 600;
-            font-size: 14px;
-            color: #fff;
-        }
-        .dish-status-item .dish-status {
-            font-size: 11px;
-            font-weight: 800;
-            padding: 4px 14px;
-            border-radius: 50px;
-        }
-        .dish-status-item .dish-status.placed {
-            background: rgba(255, 179, 0, 0.15);
-            color: #ffb300;
-            border: 1px solid rgba(255, 179, 0, 0.3);
-        }
-        .dish-status-item .dish-status.preparing {
-            background: rgba(255, 85, 0, 0.15);
-            color: #ff5500;
-            border: 1px solid rgba(255, 85, 0, 0.3);
-        }
-        .dish-status-item .dish-status.ready {
-            background: rgba(76, 175, 80, 0.15);
-            color: #4caf50;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-        .dish-status-item .dish-status.served {
-            background: rgba(0, 188, 212, 0.15);
-            color: #00bcd4;
-            border: 1px solid rgba(0, 188, 212, 0.3);
-        }
 
         /* ============================================================ */
         /* SUCCESS PAGE */
@@ -1464,6 +1463,15 @@
                 height: 30px;
                 font-size: 15px;
             }
+            .product-card .qty-stepper .qty-step-btn {
+                width: 22px;
+                height: 22px;
+                font-size: 14px;
+            }
+            .product-card .qty-stepper .qty-step-value {
+                font-size: 12px;
+                min-width: 18px;
+            }
             .cart-item-card .item-info .name {
                 font-size: 13px;
             }
@@ -1621,125 +1629,8 @@
         }
 
         /* ============================================================ */
-        /* STEPPER TRACKER STYLES */
+        /* GLOW ANIMATIONS (still used by ready-section pulse & success icon) */
         /* ============================================================ */
-        .stepper {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 16px 0 8px;
-            padding: 10px 0;
-            position: relative;
-        }
-        .stepper .step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            position: relative;
-            z-index: 2;
-            flex: 1;
-        }
-        .stepper .step .circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #222;
-            border: 2px solid #333;
-            color: #666;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .stepper .step .label {
-            font-size: 10px;
-            font-weight: 700;
-            color: #666;
-            transition: all 0.4s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .stepper .step-line {
-            height: 3px;
-            background: #333;
-            flex: 1;
-            margin-top: -24px;
-            position: relative;
-            z-index: 1;
-            transition: all 0.4s ease;
-        }
-        
-        /* Stepper active status highlights */
-        .stepper .step.active .circle {
-            background: #ff5500;
-            border-color: #ff5500;
-            color: #fff;
-            box-shadow: 0 0 12px rgba(255, 85, 0, 0.5);
-            transform: scale(1.08);
-        }
-        .stepper .step.active .label {
-            color: #fff;
-        }
-        .stepper .step.ready-step.active .circle {
-            background: #4caf50;
-            border-color: #4caf50;
-            color: #fff;
-            box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
-        }
-        .stepper .step.ready-step.active .label {
-            color: #4caf50;
-        }
-        .stepper .step.served-step.active .circle {
-            background: #00bcd4;
-            border-color: #00bcd4;
-            color: #fff;
-            box-shadow: 0 0 12px rgba(0, 188, 212, 0.5);
-        }
-        .stepper .step.served-step.active .label {
-            color: #00bcd4;
-        }
-        .stepper .step-line.active {
-            background: #ff5500;
-        }
-        .stepper .step-line.ready-line {
-            background: #4caf50;
-        }
-
-        /* Tracker general status badge styles */
-        .status-badge-tracker {
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .status-badge-tracker.placed {
-            background: rgba(255, 179, 0, 0.15);
-            color: #ffb300;
-            border: 1px solid rgba(255, 179, 0, 0.3);
-        }
-        .status-badge-tracker.preparing {
-            background: rgba(255, 85, 0, 0.15);
-            color: #ff5500;
-            border: 1px solid rgba(255, 85, 0, 0.3);
-            animation: pulse-orange-glow 1.5s infinite alternate ease-in-out;
-        }
-        .status-badge-tracker.ready {
-            background: rgba(76, 175, 80, 0.15);
-            color: #4caf50;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-            animation: pulse-green-glow 1.5s infinite alternate ease-in-out;
-        }
-        .status-badge-tracker.served {
-            background: rgba(0, 188, 212, 0.15);
-            color: #00bcd4;
-            border: 1px solid rgba(0, 188, 212, 0.3);
-        }
-
-        /* Glowing and pulsing animations */
         @keyframes pulse-green-glow {
             0% {
                 box-shadow: 0 0 4px rgba(76, 175, 80, 0.2);
@@ -1752,14 +1643,6 @@
         }
         .pulse-green-glow {
             animation: pulse-green-glow 1.5s infinite alternate ease-in-out;
-        }
-        @keyframes pulse-orange-glow {
-            0% {
-                box-shadow: 0 0 4px rgba(255, 85, 0, 0.2);
-            }
-            100% {
-                box-shadow: 0 0 15px rgba(255, 85, 0, 0.5);
-            }
         }
 
         /* ============================================================ */
@@ -2082,13 +1965,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.02) !important;
         }
         body.light-theme .track-card h3 {
-            color: #1A1A1A !important;
-        }
-        body.light-theme .dish-status-item {
-            background-color: #fff !important;
-            border-color: #f0edeb !important;
-        }
-        body.light-theme .dish-status-item .dish-name {
             color: #1A1A1A !important;
         }
         body.light-theme .track-items-box {

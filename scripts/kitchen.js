@@ -7,6 +7,27 @@
     let soundEnabled = true;
     let staffUser = { name: 'Vikram Singh', role: 'KITCHEN_STAFF' };
 
+    // --- SERVING URGENCY ---
+    // Minutes-since-placed thresholds. Below `relaxed` = no rush; at/above `critical` = customer is waiting too long.
+    const URGENCY_THRESHOLDS = { relaxed: 5, medium: 15, urgent: 30 };
+
+    function getUrgency(elapsedMinutes) {
+        if (elapsedMinutes < URGENCY_THRESHOLDS.relaxed) {
+            return { level: 'relaxed', label: 'On Time', icon: 'fa-check-circle' };
+        }
+        if (elapsedMinutes < URGENCY_THRESHOLDS.medium) {
+            return { level: 'medium', label: 'Watch', icon: 'fa-clock' };
+        }
+        if (elapsedMinutes < URGENCY_THRESHOLDS.urgent) {
+            return { level: 'urgent', label: 'Urgent', icon: 'fa-triangle-exclamation' };
+        }
+        return { level: 'critical', label: 'Serve Now', icon: 'fa-fire' };
+    }
+
+    function elapsedMinutesSince(isoTimestamp) {
+        return Math.max(0, Math.floor((Date.now() - new Date(isoTimestamp).getTime()) / 60000));
+    }
+
     // DOM Elements
     const stationTabsEl = document.getElementById('stationTabs');
     const kitchenQueueGridEl = document.getElementById('kitchenQueueGrid');
@@ -17,12 +38,16 @@
     const kitchenToastEl = document.getElementById('kitchenToast');
     const toastTitleEl = document.getElementById('toastTitle');
     const toastBodyEl = document.getElementById('toastBody');
+    const urgencyAlertBannerEl = document.getElementById('urgencyAlertBanner');
+    const urgencyBannerTitleEl = document.getElementById('urgencyBannerTitle');
+    const urgencyBannerBodyEl = document.getElementById('urgencyBannerBody');
 
     // Stat Elements
     const statPendingEl = document.getElementById('statPending');
     const statClaimedEl = document.getElementById('statClaimed');
     const statPreparingEl = document.getElementById('statPreparing');
     const statReadyEl = document.getElementById('statReady');
+    const statCriticalEl = document.getElementById('statCritical');
 
     // Audio Chime Generator using Web Audio API (no external sound file needed)
     function playChime() {
@@ -101,10 +126,31 @@
         const preparingCount = allItems.filter(i => i.status === 'preparing').length;
         const readyCount = allItems.filter(i => i.status === 'ready').length;
 
+        // Running-late count spans the whole kitchen, not just the currently filtered station
+        const allQueueItems = window.FlameDineStore.getKitchenQueue('All');
+        const lateItems = allQueueItems.filter(i => {
+            const level = getUrgency(elapsedMinutesSince(i.createdAt)).level;
+            return level === 'urgent' || level === 'critical';
+        });
+
         if (statPendingEl) statPendingEl.textContent = pendingCount;
         if (statClaimedEl) statClaimedEl.textContent = claimedCount;
         if (statPreparingEl) statPreparingEl.textContent = preparingCount;
         if (statReadyEl) statReadyEl.textContent = readyCount;
+        if (statCriticalEl) statCriticalEl.textContent = lateItems.length;
+
+        if (urgencyAlertBannerEl) {
+            if (lateItems.length > 0) {
+                const criticalCount = lateItems.filter(i => getUrgency(elapsedMinutesSince(i.createdAt)).level === 'critical').length;
+                urgencyAlertBannerEl.classList.remove('hidden');
+                urgencyBannerTitleEl.textContent = `${lateItems.length} dish${lateItems.length > 1 ? 'es' : ''} running late`;
+                urgencyBannerBodyEl.textContent = criticalCount > 0
+                    ? `${criticalCount} dish${criticalCount > 1 ? 'es are' : ' is'} over 30 minutes — serve these first before the customer gets frustrated.`
+                    : 'Prioritize these before customers get frustrated.';
+            } else {
+                urgencyAlertBannerEl.classList.add('hidden');
+            }
+        }
 
         if (queueItems.length === 0) {
             kitchenQueueGridEl.innerHTML = '';
@@ -131,8 +177,10 @@
 
         kitchenQueueGridEl.innerHTML = Object.values(grouped).map(group => {
             const earliestItem = group.items.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
-            const elapsedMinutes = Math.max(0, Math.floor((Date.now() - new Date(earliestItem.createdAt).getTime()) / 60000));
-            
+            const elapsedMinutes = elapsedMinutesSince(earliestItem.createdAt);
+            const cardUrgency = getUrgency(elapsedMinutes);
+            const barPct = Math.min(100, Math.round((elapsedMinutes / URGENCY_THRESHOLDS.urgent) * 100));
+
             const cardStatusClass = group.items.some(i => i.status === 'preparing') ? 'status-preparing'
                 : group.items.some(i => i.status === 'claimed') ? 'status-claimed' : 'status-placed';
 
@@ -164,16 +212,23 @@
                     ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">CLAIMED (${item.claimedBy || 'Chef'})</span>`
                     : `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 uppercase">PREPARING</span>`;
 
+                const itemElapsed = elapsedMinutesSince(item.createdAt);
+                const itemUrgency = getUrgency(itemElapsed);
+                const urgencyTagHtml = `<span class="urgency-tag ${itemUrgency.level}"><i class="fas ${itemUrgency.icon}"></i> ${itemElapsed}m &middot; ${itemUrgency.label}</span>`;
+                const itemRowUrgencyClass = itemUrgency.level === 'critical' ? 'urgency-critical-item'
+                    : itemUrgency.level === 'urgent' ? 'urgency-urgent-item' : '';
+
                 return `
-                    <div class="item-row">
+                    <div class="item-row ${itemRowUrgencyClass}">
                         <div class="flex items-start justify-between gap-2">
                             <div>
                                 <div class="font-bold text-sm text-white flex items-center gap-2">
                                     ${item.name} <span class="text-orange-400 font-black">×${item.qty}</span>
                                 </div>
-                                <div class="text-xs text-zinc-400 mt-0.5 flex items-center gap-2">
+                                <div class="text-xs text-zinc-400 mt-0.5 flex items-center gap-2 flex-wrap">
                                     <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold text-[10px]">${item.station}</span>
                                     <span>Round ${item.round_no || 1}</span>
+                                    ${urgencyTagHtml}
                                 </div>
                                 ${item.note ? `<div class="text-xs text-amber-300/90 font-medium italic mt-1"><i class="fas fa-comment-dots mr-1"></i>"${item.note}"</div>` : ''}
                             </div>
@@ -187,24 +242,33 @@
             }).join('');
 
             return `
-                <div class="order-card ${cardStatusClass} p-5 flex flex-col justify-between">
+                <div class="order-card ${cardStatusClass} urgency-${cardUrgency.level} p-5 flex flex-col justify-between">
                     <div>
                         <!-- Card Header -->
-                        <div class="flex items-center justify-between border-b border-zinc-800 pb-3 mb-4">
-                            <div class="flex items-center gap-2">
-                                <span class="w-9 h-9 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-black text-base border border-orange-500/30">
-                                    T${group.tableNumber}
-                                </span>
-                                <div>
-                                    <div class="font-black text-base text-white">Table ${group.tableNumber}</div>
-                                    <div class="text-[11px] text-zinc-500 font-mono">Session ${group.sessionId.substring(0, 10)}</div>
+                        <div class="border-b border-zinc-800 pb-3 mb-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-9 h-9 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-black text-base border border-orange-500/30">
+                                        T${group.tableNumber}
+                                    </span>
+                                    <div>
+                                        <div class="font-black text-base text-white">Table ${group.tableNumber}</div>
+                                        <div class="text-[11px] text-zinc-500 font-mono">Session ${group.sessionId.substring(0, 10)}</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="urgency-timer ${cardUrgency.level} justify-end">
+                                        <i class="fas ${cardUrgency.icon}"></i> ${elapsedMinutes}m ago
+                                    </div>
+                                    <div class="text-[10px] text-zinc-500 mt-0.5">${group.items.length} item(s)</div>
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-xs font-bold text-orange-400 flex items-center gap-1 justify-end">
-                                    <i class="fas fa-clock text-[10px]"></i> ${elapsedMinutes}m ago
-                                </div>
-                                <div class="text-[10px] text-zinc-500">${group.items.length} item(s)</div>
+                            <div class="flex items-center justify-between gap-2 mt-2">
+                                <span class="urgency-tag ${cardUrgency.level}"><i class="fas ${cardUrgency.icon}"></i> ${cardUrgency.label}</span>
+                                ${cardUrgency.level === 'critical' ? '<span class="text-[10px] font-bold text-red-400">Customer is waiting — serve now!</span>' : ''}
+                            </div>
+                            <div class="urgency-bar-track">
+                                <div class="urgency-bar-fill ${cardUrgency.level}" style="width:${barPct}%;"></div>
                             </div>
                         </div>
 
@@ -234,6 +298,13 @@
         const res = window.FlameDineStore.updateOrderItemStatus(itemId, newStatus, staffUser.name);
         if (!res.success) {
             alert(res.message);
+        }
+    };
+
+    window.reloadDemoData = function () {
+        if (confirm('Reset the shared demo data (orders, sessions, bills) back to the seed state? This affects all open FlameDine tabs.')) {
+            window.FlameDineStore.resetToDefaults();
+            renderQueue();
         }
     };
 

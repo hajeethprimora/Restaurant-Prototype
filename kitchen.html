@@ -47,6 +47,74 @@
         .btn-claim { background: #2563eb; hover: background: #1d4ed8; }
         .btn-prepare { background: #d97706; hover: background: #b45309; }
         .btn-ready { background: #16a34a; hover: background: #15803d; }
+
+        /* ─── SERVING URGENCY ─── */
+        /* Card-level urgency overrides the base status border once a ticket is aging */
+        .order-card.urgency-medium { border-color: rgba(245, 158, 11, 0.55); }
+        .order-card.urgency-urgent {
+            border-color: rgba(249, 115, 22, 0.7);
+            box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.18);
+        }
+        .order-card.urgency-critical {
+            border-color: rgba(239, 68, 68, 0.85);
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3), 0 0 24px rgba(239, 68, 68, 0.18);
+            animation: criticalCardPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes criticalCardPulse {
+            0%, 100% { box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.12); }
+            50% { box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.55), 0 0 30px rgba(239, 68, 68, 0.32); }
+        }
+
+        .urgency-timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .urgency-timer.relaxed { color: #34d399; }
+        .urgency-timer.medium { color: #fbbf24; }
+        .urgency-timer.urgent { color: #fb923c; }
+        .urgency-timer.critical { color: #f87171; animation: criticalTextPulse 1s infinite; }
+        @keyframes criticalTextPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+        .urgency-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+        .urgency-tag.relaxed { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .urgency-tag.medium { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .urgency-tag.urgent { background: rgba(249, 115, 22, 0.18); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); }
+        .urgency-tag.critical { background: rgba(239, 68, 68, 0.22); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.45); animation: criticalTextPulse 1s infinite; }
+
+        .urgency-bar-track {
+            height: 5px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .urgency-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease, background 0.4s ease; }
+        .urgency-bar-fill.relaxed { background: linear-gradient(90deg, #10b981, #34d399); }
+        .urgency-bar-fill.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .urgency-bar-fill.urgent { background: linear-gradient(90deg, #f97316, #fb923c); }
+        .urgency-bar-fill.critical { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+        .item-row.urgency-critical-item { border-color: rgba(239, 68, 68, 0.45); background: rgba(239, 68, 68, 0.07); }
+        .item-row.urgency-urgent-item { border-color: rgba(249, 115, 22, 0.35); }
+
+        #urgencyAlertBanner {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.08));
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -77,6 +145,10 @@
                 <i class="fas fa-volume-up text-orange-400" id="soundIcon"></i>
                 <span class="hidden sm:inline">Chime On</span>
             </button>
+            <button onclick="reloadDemoData()" class="p-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-sm font-semibold flex items-center gap-2" title="Reset to Demo Data">
+                <i class="fas fa-rotate-right"></i>
+                <span class="hidden sm:inline">Reload Demo</span>
+            </button>
             <a href="login.html" class="p-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-sm font-semibold flex items-center gap-2" title="Switch Portal">
                 <i class="fas fa-exchange-alt"></i>
                 <span class="hidden sm:inline">Portal Switch</span>
@@ -92,6 +164,7 @@
                 <div>Claimed: <span id="statClaimed" class="font-black text-amber-400 text-sm">0</span></div>
                 <div>Preparing: <span id="statPreparing" class="font-black text-orange-400 text-sm">0</span></div>
                 <div>Ready Today: <span id="statReady" class="font-black text-emerald-400 text-sm">0</span></div>
+                <div>Running Late: <span id="statCritical" class="font-black text-red-400 text-sm">0</span></div>
             </div>
             <div class="text-zinc-500">Auto-synced with Customer App &amp; Server Board</div>
         </div>
@@ -109,6 +182,17 @@
                 </div>
             </div>
             <button onclick="dismissToast()" class="text-xs font-bold bg-black/30 hover:bg-black/50 px-3 py-1.5 rounded-lg">Dismiss</button>
+        </div>
+
+        <!-- Serving Urgency Alert Banner -->
+        <div id="urgencyAlertBanner" class="hidden mb-6 p-4 rounded-2xl text-white flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-triangle-exclamation text-2xl text-red-400"></i>
+                <div>
+                    <div class="font-bold text-sm text-red-100" id="urgencyBannerTitle">Orders running late</div>
+                    <div class="text-xs text-red-200/80" id="urgencyBannerBody">Prioritize these before customers get frustrated.</div>
+                </div>
+            </div>
         </div>
 
         <!-- Queue Grid -->
