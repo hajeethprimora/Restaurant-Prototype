@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Flame Dine – Server Staff Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #09090b; color: #f4f4f5; }
+        .server-header { background: #18181b; border-bottom: 1px solid #27272a; }
+        .ready-card {
+            background: #18181b;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            border-radius: 18px;
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.1);
+        }
+        .table-tile {
+            background: #18181b;
+            border: 2px solid #27272a;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .table-tile:hover { transform: translateY(-3px); border-color: #52525b; }
+        .table-tile.has-ready { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
+        .table-tile.has-preparing { border-color: #eab308; }
+        .pulse-green { animation: pulseGreen 1.5s infinite alternate; }
+        @keyframes pulseGreen {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            100% { box-shadow: 0 0 15px 5px rgba(34, 197, 94, 0.2); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- HEADER -->
+    <header class="server-header sticky top-0 z-40 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-500 flex items-center justify-center font-bold text-xl border border-emerald-500/30">
+                <i class="fas fa-concierge-bell"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                    Server Staff Dashboard
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">SERVICE LIVE</span>
+                </h1>
+                <p class="text-xs text-zinc-400 font-medium">Branch: The Grand Dine &middot; Server: <span id="serverNameDisplay" class="text-zinc-200 font-bold">Priya Sharma</span></p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex items-center gap-3">
+            <button onclick="simulateCallWaiter()" class="px-3 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold hover:bg-amber-500/30 transition flex items-center gap-1.5">
+                <i class="fas fa-hand-paper"></i> Test Call Waiter
+            </button>
+            <a href="login.html" class="p-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-sm font-semibold flex items-center gap-2">
+                <i class="fas fa-exchange-alt"></i>
+                <span class="hidden sm:inline">Portal Switch</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- METRICS BANNER -->
+    <div class="bg-zinc-950 border-b border-zinc-800/80 px-6 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-zinc-400">
+            <div class="flex items-center gap-6">
+                <div>Ready for Pickup: <span id="statReadyCount" class="font-black text-emerald-400 text-sm">0</span></div>
+                <div>Picked Up: <span id="statPickedCount" class="font-black text-blue-400 text-sm">0</span></div>
+                <div>Served Today: <span id="statServedCount" class="font-black text-zinc-300 text-sm">0</span></div>
+            </div>
+            <div class="text-zinc-500">Instant alert when Kitchen marks items ready</div>
+        </div>
+    </div>
+
+    <!-- MAIN BODY -->
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-8">
+
+        <!-- WAITER CALL ALERTS -->
+        <div id="waiterCallArea" class="hidden space-y-3">
+            <!-- Rendered by JS -->
+        </div>
+
+        <!-- READY FOR PICKUP SECTION -->
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-black text-white flex items-center gap-2">
+                    <i class="fas fa-bell text-emerald-400"></i>
+                    Ready for Pickup (Kitchen Hand-Off)
+                    <span id="readyBadge" class="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">0 Items</span>
+                </h2>
+                <button id="batchPickupBtn" onclick="pickupAllReady()" class="hidden text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition active:scale-95">
+                    <i class="fas fa-check-double mr-1"></i> Pick Up All Ready
+                </button>
+            </div>
+
+            <div id="readyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Ready items cards dynamically rendered -->
+            </div>
+
+            <!-- Empty Ready Feed -->
+            <div id="emptyReadyFeed" class="text-center py-10 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                <i class="fas fa-clock text-zinc-600 text-3xl mb-2 block"></i>
+                <div class="text-sm font-bold text-zinc-400">No dishes waiting for pickup</div>
+                <div class="text-xs text-zinc-600 mt-0.5">Kitchen staff will mark items ready here in real time.</div>
+            </div>
+        </section>
+
+        <!-- ACTIVE TABLES FLOOR MAP -->
+        <section class="border-t border-zinc-800 pt-8">
+            <h2 class="text-lg font-black text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-th text-zinc-400"></i>
+                Dining Floor Overview (Tables 1 – 12)
+            </h2>
+            <div id="tablesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Table Tiles rendered dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <!-- TABLE DETAIL DRAWER MODAL -->
+    <div id="tableDrawer" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex justify-end">
+        <div class="bg-zinc-900 border-l border-zinc-800 w-full max-w-md h-full p-6 flex flex-col justify-between overflow-y-auto">
+            <div>
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-4 mb-4">
+                    <div>
+                        <h3 class="text-xl font-black text-white" id="drawerTitle">Table Details</h3>
+                        <p class="text-xs text-zinc-400" id="drawerSubtitle">Session active</p>
+                    </div>
+                    <button onclick="closeTableDrawer()" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center">
+                        &times;
+                    </button>
+                </div>
+                <div id="drawerContent" class="space-y-4">
+                    <!-- Table orders rendered dynamically -->
+                </div>
+            </div>
+            <div class="border-t border-zinc-800 pt-4 mt-6">
+                <button onclick="closeTableDrawer()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl text-sm">
+                    Close Drawer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/store.js"></script>
+    <script src="scripts/server.js"></script>
+</body>
+</html>

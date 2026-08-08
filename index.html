@@ -15,9 +15,20 @@
 <body>
 
     <!-- ============================================================ -->
+    <!-- BOOT LOADER -->
+    <!-- ============================================================ -->
+    <div id="pageLoader" class="page-loader">
+        <div class="page-loader-icon">
+            <i class="fas fa-fire"></i>
+        </div>
+        <div class="page-loader-name">Flame Dine</div>
+        <div class="page-loader-bar"><div class="page-loader-bar-fill"></div></div>
+    </div>
+
+    <!-- ============================================================ -->
     <!-- PAGE 1: LANDING (QR SCAN) -->
     <!-- ============================================================ -->
-    <div id="page-landing">
+    <div id="page-landing" class="page-transition">
         <div class="text-center max-w-sm mx-auto w-full">
             <div class="landing-icon">
                 <i class="fas fa-fire"></i>
@@ -38,15 +49,26 @@
     <!-- ============================================================ -->
     <!-- PAGE 2: HOME (MENU) -->
     <!-- ============================================================ -->
-    <div id="page-menu">
+    <div id="page-menu" class="page-transition">
         <div class="app-header">
             <div class="top-row">
                 <div class="location">
                     <span class="restaurant-name">Flame Dine</span>
                     <span class="table-badge">Table 5</span>
                 </div>
-                <div id="headerOrderTracker" class="header-tracker-btn">
-                    <i class="fas fa-fire text-sm mr-1"></i> Track Order
+                <div class="flex items-center gap-3">
+                    <button id="callWaiterBtn" class="header-tracker-btn border-glowing-blue" title="Call Waiter to Table">
+                        <i class="fas fa-hand-paper text-sm mr-1 text-amber-400"></i> Call Waiter
+                    </button>
+                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Theme">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                    <div id="headerOrderTracker" class="header-tracker-btn">
+                        <i class="fas fa-fire text-sm mr-1"></i> Track Order
+                    </div>
+                    <a href="login.html" class="theme-toggle-btn" title="Switch Staff Portal">
+                        <i class="fas fa-user-shield"></i>
+                    </a>
                 </div>
             </div>
             <div class="search-bar">
@@ -60,12 +82,12 @@
             <div class="product-grid-area" id="productGridArea">
 
                 <!-- PREPARING TOAST - with AVATARS (round images) -->
-                <div class="preparing-toast" id="preparingToast">
+                <div class="preparing-toast" id="preparingToast" style="display: none;">
                     <!-- PREPARING SECTION -->
-                    <div class="prep-section" id="prepSection">
+                     <div class="prep-section" id="prepSection">
                         <span class="fire-icon"><i class="fas fa-fire"></i></span>
                         <div class="status-info">
-                            <span class="orders-text"><span class="highlight" id="prepCount">0</span> preparing</span>
+                            <span class="orders-text"><span class="highlight" id="prepCount">0</span></span>
                         </div>
                         <div class="avatar-list" id="orderAvatars"></div>
                     </div>
@@ -78,7 +100,6 @@
                         <span class="ready-icon"><i class="fas fa-bell"></i></span>
                         <div class="status-info">
                             <span class="ready-text"><span class="highlight" id="readyCount">0</span> ready!</span>
-                            <span class="ready-subtext">Pick up at counter</span>
                         </div>
                     </div>
                 </div>
@@ -105,7 +126,7 @@
     <!-- ============================================================ -->
     <!-- PAGE 3: CART -->
     <!-- ============================================================ -->
-    <div id="page-cart">
+    <div id="page-cart" class="page-transition">
         <div class="cart-header">
             <div class="back-row">
                 <button class="back-btn" id="cartBackBtn"><i class="fas fa-arrow-left"></i></button>
@@ -119,7 +140,7 @@
     <!-- ============================================================ -->
     <!-- PAGE 4: TRACKER -->
     <!-- ============================================================ -->
-    <div id="page-tracker">
+    <div id="page-tracker" class="page-transition">
         <div class="app-header" style="position:sticky; top:0; z-index:10;">
             <div class="top-row">
                 <div class="location" style="cursor:pointer;" id="backToMenuBtn">
@@ -129,12 +150,33 @@
             </div>
         </div>
         <div class="px-4 pt-4 max-w-md mx-auto pb-8">
-            <div class="track-card text-center">
-                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-check-circle text-green-600 text-3xl"></i>
+            <div class="track-card">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-extrabold text-lg text-white">Order #<span id="trackOrderId">FL-1042</span></h2>
+                    <span class="status-badge-tracker" id="trackerGeneralBadge">Placed</span>
                 </div>
-                <h2 class="font-extrabold text-xl text-[#1A1A1A]">Order #<span id="trackOrderId">FL-1042</span></h2>
-                <p class="text-sm text-[#888] mt-1">Order placed successfully</p>
+                <!-- Visual Stepper Progress Map -->
+                <div class="stepper" id="trackerStepper">
+                    <div class="step active" id="stepPlaced">
+                        <div class="circle"><i class="fas fa-receipt"></i></div>
+                        <div class="label">Placed</div>
+                    </div>
+                    <div class="step-line" id="linePlaced"></div>
+                    <div class="step" id="stepPreparing">
+                        <div class="circle"><i class="fas fa-fire"></i></div>
+                        <div class="label">Preparing</div>
+                    </div>
+                    <div class="step-line" id="linePreparing"></div>
+                    <div class="step" id="stepReady">
+                        <div class="circle"><i class="fas fa-bell"></i></div>
+                        <div class="label">Ready!</div>
+                    </div>
+                    <div class="step-line" id="lineReady"></div>
+                    <div class="step" id="stepServed">
+                        <div class="circle"><i class="fas fa-check-double"></i></div>
+                        <div class="label">Served</div>
+                    </div>
+                </div>
             </div>
             <div class="track-card">
                 <h3 class="font-bold text-sm text-[#888] uppercase tracking-wider mb-3">Dish Status</h3>
@@ -154,23 +196,7 @@
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- PAGE 5: SUCCESS -->
-    <!-- ============================================================ -->
-    <div id="page-success">
-        <div class="success-card">
-            <div class="tick-circle">
-                <svg viewBox="0 0 24 24">
-                    <polyline points="4 12 10 18 20 6" />
-                </svg>
-            </div>
-            <h2>Order Placed!</h2>
-            <p class="sub-text">Your order has been received</p>
-            <p class="order-id">Order #<span id="successOrderId">FL-0000</span></p>
-            <button class="btn-track" id="trackFromSuccessBtn"><i class="fas fa-receipt mr-2"></i> Track Order</button>
-            <button class="btn-order-more" id="orderMoreFromSuccessBtn"><i class="fas fa-utensils mr-2"></i> Order More</button>
-        </div>
-    </div>
+
 
     <!-- ============================================================ -->
     <!-- OVERLAY -->
@@ -178,57 +204,79 @@
     <div id="overlay" class="overlay"></div>
 
     <!-- ============================================================ -->
+    <!-- ============================================================ -->
     <!-- ITEM SHEET -->
     <!-- ============================================================ -->
     <div id="itemSheet" class="item-sheet">
         <div class="handle"></div>
-        <div class="sheet-header">
-            <div class="image-wrap">
-                <img id="itemSheetImg" src="" alt="dish" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                <div class="fallback-emoji" style="display:none;">🍗</div>
-            </div>
-            <div class="info">
-                <div class="name" id="itemSheetName">Butter Chicken</div>
-                <div class="desc" id="itemSheetDesc" style="display: none;"></div>
-                <div class="price" id="itemSheetPrice">₹349</div>
-            </div>
-            <button class="close" id="closeItemSheetBtn"><i class="fas fa-times"></i></button>
+        <div class="item-sheet-banner">
+            <img id="itemSheetImg" src="" alt="dish" onerror="if(this.src.indexOf('unsplash.com') === -1){this.src=getDishFallbackImage(document.getElementById('itemSheetName').textContent);}else{this.style.display='none'; this.nextElementSibling.style.display='flex';}" />
+            <div class="fallback-emoji" style="display:none;">🍗</div>
+            <button class="close-btn" id="closeItemSheetBtn"><i class="fas fa-times"></i></button>
         </div>
-        <div class="mt-4">
-            <label class="text-sm font-semibold text-[#888] block mb-1">Special Instructions</label>
-            <textarea id="itemNote" class="w-full border border-[#eee] rounded-xl p-3 text-sm resize-none focus:ring-2 focus:ring-fire outline-none" rows="2" placeholder="e.g. Less spicy, extra cheese..."></textarea>
-        </div>
-        <div class="mt-4">
-            <label class="text-sm font-semibold text-[#888] block mb-2">Quantity</label>
-            <div class="flex items-center gap-4">
-                <button id="itemSheetMinus" class="w-10 h-10 rounded-full bg-[#f5f3f0] text-xl font-bold hover:bg-[#e8e5e2] transition">−</button>
-                <span class="text-xl font-bold min-w-[32px] text-center" id="itemSheetQty">1</span>
-                <button id="itemSheetPlus" class="w-10 h-10 rounded-full bg-fire text-white text-xl font-bold hover:bg-fire-dark transition shadow-lg shadow-red-500/25">+</button>
+        <div class="item-sheet-body">
+            <div class="flex justify-between items-start mb-2 mt-4">
+                <div class="name font-extrabold text-xl text-white" id="itemSheetName">Butter Chicken</div>
+                <div class="price font-extrabold text-xl text-fire" id="itemSheetPrice">₹349</div>
             </div>
-        </div>
-        <button id="addFromSheetBtn" class="w-full mt-6 bg-fire text-white font-bold py-4 rounded-2xl shadow-xl shadow-red-500/30 hover:bg-fire-dark transition active:scale-[0.98] text-base">
-            <i class="fas fa-plus mr-2"></i> Add to Cart
-        </button>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- FLOATING PREPARING TOAST -->
-    <!-- ============================================================ -->
-    <div id="preparingFloating" class="preparing-floating">
-        <span class="fire-icon"><i class="fas fa-fire"></i></span>
-        <span><span class="highlight">3</span> preparing</span>
-        <div class="avatar-list">
-            <span class="avatar">1</span>
-            <span class="avatar">2</span>
-            <span class="avatar">3</span>
+            <div class="desc text-sm text-[#888] mb-4" id="itemSheetDesc" style="display: none;"></div>
+            
+            <div class="mt-4">
+                <label class="text-sm font-semibold text-[#888] block mb-1">Special Instructions</label>
+                <textarea id="itemNote" class="w-full border border-[#222] bg-[#1c1c1e] text-white rounded-xl p-3 text-sm resize-none focus:ring-2 focus:ring-fire outline-none" rows="2" placeholder="e.g. Less spicy, extra cheese..."></textarea>
+            </div>
+            <div class="mt-4">
+                <label class="text-sm font-semibold text-[#888] block mb-2">Quantity</label>
+                <div class="flex items-center gap-4">
+                    <button id="itemSheetMinus" class="w-10 h-10 rounded-full bg-[#2a2a2a] text-white text-xl font-bold hover:bg-[#333] transition">−</button>
+                    <span class="text-xl font-bold min-w-[32px] text-center text-white" id="itemSheetQty">1</span>
+                    <button id="itemSheetPlus" class="w-10 h-10 rounded-full bg-fire text-white text-xl font-bold hover:bg-fire-dark transition shadow-lg shadow-red-500/25">+</button>
+                </div>
+            </div>
+            <button id="addFromSheetBtn" class="w-full mt-6 bg-fire text-white font-bold py-4 rounded-2xl shadow-xl shadow-red-500/30 hover:bg-fire-dark transition active:scale-[0.98] text-base">
+                <i class="fas fa-plus mr-2"></i> Add to Cart
+            </button>
         </div>
     </div>
 
+
+
+
+    <!-- ============================================================ -->
+    <!-- SUCCESS PAGE -->
+    <!-- ============================================================ -->
+    <div id="page-success" class="page-container page-transition flex-col items-center justify-center">
+        <div class="success-card">
+            <!-- Animated Green Tick Ring -->
+            <div class="tick-circle">
+                <svg viewBox="0 0 52 52">
+                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+            </div>
+            
+            <h2 class="text-white font-extrabold text-2xl mt-4">Order Placed!</h2>
+            <p class="sub-text text-[#888] text-sm mt-1">The kitchen has started preparing your food.</p>
+            
+            <!-- Order Details Card -->
+            <div class="success-details-card mt-6">
+                <div class="detail-row"><span class="label">Order ID</span><span class="value" id="successOrderId">#FL-2601</span></div>
+                <div class="detail-row"><span class="label">Table</span><span class="value" id="successTable">Table 5</span></div>
+                <div class="detail-row"><span class="label">Total Paid</span><span class="value text-fire" id="successTotal">₹647</span></div>
+                <div class="detail-row"><span class="label">Est. Time</span><span class="value" id="successEstTime">12-15 mins</span></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <button class="btn-track" id="successTrackBtn"><i class="fas fa-route mr-2"></i> Track Live Status</button>
+            <button class="btn-order-more" id="successBackMenuBtn"><i class="fas fa-arrow-left mr-2"></i> Back to Menu</button>
+        </div>
+    </div>
 
     <!-- ============================================================ -->
     <!-- JAVASCRIPT -->
     <!-- ============================================================ -->
     <script src="scripts/data.js" defer></script>
+    <script src="scripts/store.js" defer></script>
     <script src="scripts/app.js" defer></script>
 </body>
 </html>

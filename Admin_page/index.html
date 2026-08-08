@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Dine‑In Admin Prototype</title>
+    <title>Flame Dine – Admin Dashboard</title>
 
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,7 +16,7 @@
 
     <!-- ═══ SIDEBAR ═══ -->
     <aside class="sidebar">
-        <div class="logo"><i class="fas fa-utensils"></i> Softnix<span>.</span><span class="badge-version">v2.0</span></div>
+        <div class="logo"><i class="fas fa-fire"></i> Flame<span>Dine</span><span class="badge-version">ADMIN</span></div>
 
         <button class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
         <button class="nav-item" data-page="billing"><i class="fas fa-receipt"></i><span>Billing</span></button>
@@ -26,7 +26,8 @@
         <button class="nav-item" data-page="staff"><i class="fas fa-users"></i><span>Staff</span></button>
 
         <div class="divider"></div>
-        <button class="nav-item" data-page="print-settings"><i class="fas fa-print"></i><span>Print Settings</span><span class="badge-version" style="background:#1e293b;color:#f59e0b;">Phase 2</span></button>
+        <a href="../login.html" class="nav-item" style="text-decoration:none;color:#FF3D00;"><i class="fas fa-exchange-alt"></i><span>Portal Switcher</span></a>
+        <button class="nav-item" data-page="print-settings"><i class="fas fa-print"></i><span>Print Settings</span><span class="badge-version" style="background:#27272a;color:#f59e0b;">Phase 2</span></button>
         <button class="nav-item logout" data-page="logout" style="color:#f87171;"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
     </aside>
 
@@ -57,7 +58,7 @@
 
             <div class="grid-2col">
                 <div class="card">
-                    <div class="card-title"><span><i class="fas fa-chart-line" style="color:#2563eb;margin-right:6px;"></i> Revenue (Last 7 Days)</span><span class="action-link" onclick="alert('View full report')">View Full Report →</span></div>
+                    <div class="card-title"><span><i class="fas fa-chart-line" style="color:#E53935;margin-right:6px;"></i> Revenue (Last 7 Days)</span><span class="action-link" onclick="alert('View full report')">View Full Report →</span></div>
                     <div class="bar-chart">
                         <div class="bar-wrapper"><div class="bar-value">$132</div><div class="bar" style="height:32px;"></div><div class="day-label">Mon</div></div>
                         <div class="bar-wrapper"><div class="bar-value">$198</div><div class="bar" style="height:48px;"></div><div class="day-label">Tue</div></div>
@@ -93,7 +94,7 @@
                     <div class="top-item"><span class="rank">#5</span><span class="name">Tiramisu</span><span class="sales">12 sold</span><div class="bar-bg"><div class="fill" style="width:29%;"></div></div></div>
                 </div>
                 <div class="card">
-                    <div class="card-title"><span><i class="fas fa-bolt" style="color:#2563eb;margin-right:6px;"></i> Quick Actions</span></div>
+                    <div class="card-title"><span><i class="fas fa-bolt" style="color:#E53935;margin-right:6px;"></i> Quick Actions</span></div>
                     <div class="quick-actions">
                         <button class="quick-action-btn" onclick="alert('Opening new order...')"><i class="fas fa-plus-circle"></i> New Order<span class="badge">7 open</span></button>
                         <button class="quick-action-btn" onclick="alert('Managing menu...')"><i class="fas fa-utensils"></i> Manage Menu</button>
@@ -130,7 +131,7 @@
                         <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;"><span>🍽️ Orders Placed</span><span><strong>42</strong></span></div>
                         <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;"><span>✅ Orders Completed</span><span><strong>19</strong> <span style="color:#22c55e;">(45%)</span></span></div>
                         <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;"><span>⏳ In Progress</span><span><strong>17</strong></span></div>
-                        <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>🎯 Projected Revenue</span><span><strong style="color:#2563eb;">$1,450</strong></span></div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>🎯 Projected Revenue</span><span><strong style="color:#E53935;">$1,450</strong></span></div>
                     </div>
                 </div>
             </div>
@@ -274,7 +275,7 @@
             <div class="page-header"><div><h1>Tables</h1><div class="sub">Manage tables and QR codes</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('addTable')"><i class="fas fa-plus"></i> Table</button></div></div>
             <div class="grid-cards">
                 <div class="card-item" data-table="5">
-                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#2563eb;margin-right:8px;"></i>Table 5</h4><span class="badge badge-green">Active</span></div>
+                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#E53935;margin-right:8px;"></i>Table 5</h4><span class="badge badge-green">Active</span></div>
                     <div class="card-body"><div style="font-size:12px;color:#94a3b8;font-family:monospace;word-break:break-all;">Token: a1b2c3d4-5678-90ef-ghij</div></div>
                     <div class="card-actions">
                         <button class="btn btn-sm btn-outline" onclick="openModal('editTable','5','Active')"><i class="fas fa-edit"></i></button>
@@ -283,7 +284,7 @@
                     </div>
                 </div>
                 <div class="card-item" data-table="12">
-                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#2563eb;margin-right:8px;"></i>Table 12</h4><span class="badge badge-green">Active</span></div>
+                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#E53935;margin-right:8px;"></i>Table 12</h4><span class="badge badge-green">Active</span></div>
                     <div class="card-body"><div style="font-size:12px;color:#94a3b8;font-family:monospace;word-break:break-all;">Token: z9y8x7w6-5432-10fe-dcba</div></div>
                     <div class="card-actions">
                         <button class="btn btn-sm btn-outline" onclick="openModal('editTable','12','Active')"><i class="fas fa-edit"></i></button>
@@ -301,7 +302,7 @@
                     </div>
                 </div>
                 <div class="card-item" data-table="7">
-                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#2563eb;margin-right:8px;"></i>Table 7</h4><span class="badge badge-green">Active</span></div>
+                    <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#E53935;margin-right:8px;"></i>Table 7</h4><span class="badge badge-green">Active</span></div>
                     <div class="card-body"><div style="font-size:12px;color:#94a3b8;font-family:monospace;word-break:break-all;">Token: m5n6o7p8-9012-34cd-efgh</div></div>
                     <div class="card-actions">
                         <button class="btn btn-sm btn-outline" onclick="openModal('editTable','7','Active')"><i class="fas fa-edit"></i></button>
@@ -358,6 +359,7 @@
         <div class="modal" id="modalContent"></div>
     </div>
 
+    <script src="../scripts/store.js" defer></script>
     <script src="scripts/admin.js" defer></script>
 </body>
 </html>

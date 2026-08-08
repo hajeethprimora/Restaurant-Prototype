@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Flame Dine – Multi-Role Login Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body {
+            background: #0a0a0c;
+            color: #f4f4f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -20%;
+            width: 70vw;
+            height: 70vw;
+            background: radial-gradient(circle, rgba(255, 61, 0, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -20%;
+            width: 70vw;
+            height: 70vw;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .login-card {
+            background: rgba(24, 24, 27, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            width: 100%;
+            max-width: 440px;
+            padding: 40px 32px;
+            position: relative;
+            z-index: 10;
+        }
+        .brand-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #FF3D00, #C62828);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: #fff;
+            margin: 0 auto 16px;
+            box-shadow: 0 12px 30px rgba(255, 61, 0, 0.4);
+        }
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 61, 0, 0.5);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <!-- Logo -->
+        <div class="text-center">
+            <div class="brand-icon">
+                <i class="fas fa-fire"></i>
+            </div>
+            <h1 class="text-2xl font-black text-white tracking-tight">Softnix Flame Dine</h1>
+            <p class="text-xs text-zinc-400 font-medium mt-1">Multi-Role Portal &middot; Select your dashboard</p>
+        </div>
+
+        <!-- Preset Role Quick Launcher -->
+        <div class="mt-8 space-y-3">
+            <div class="text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Quick Role Login</div>
+
+            <!-- Admin -->
+            <button class="preset-btn w-full text-left" onclick="quickLogin('ADMIN')">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-sm text-white">Admin Portal</div>
+                        <div class="text-xs text-zinc-400">Setup, Billing & Analytics</div>
+                    </div>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300">ADMIN</span>
+            </button>
+
+            <!-- Kitchen Staff -->
+            <button class="preset-btn w-full text-left" onclick="quickLogin('KITCHEN_STAFF')">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-lg">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-sm text-white">Kitchen Display System (KDS)</div>
+                        <div class="text-xs text-zinc-400">Live Station Queue & Claiming</div>
+                    </div>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-300">KITCHEN</span>
+            </button>
+
+            <!-- Server Staff -->
+            <button class="preset-btn w-full text-left" onclick="quickLogin('SERVER')">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg">
+                        <i class="fas fa-concierge-bell"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-sm text-white">Server Dashboard</div>
+                        <div class="text-xs text-zinc-400">Active Tables & Pickup Feed</div>
+                    </div>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300">SERVER</span>
+            </button>
+
+            <!-- Customer Dine-In -->
+            <button class="preset-btn w-full text-left" onclick="quickLogin('CUSTOMER')">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-sm text-white">Customer QR Ordering</div>
+                        <div class="text-xs text-zinc-400">Scan Table 5 & Place Orders</div>
+                    </div>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300">GUEST</span>
+            </button>
+        </div>
+
+        <div class="relative my-6 text-center">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-zinc-800"></div></div>
+            <span class="relative px-3 bg-zinc-900 text-xs font-semibold text-zinc-500 uppercase tracking-wider">or sign in with credentials</span>
+        </div>
+
+        <!-- Custom Login Form -->
+        <form id="loginForm" class="space-y-4" onsubmit="handleFormLogin(event)">
+            <div>
+                <label class="block text-xs font-semibold text-zinc-400 mb-1">Staff Email</label>
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-3.5 top-3.5 text-zinc-500 text-sm"></i>
+                    <input type="email" id="emailInput" required placeholder="staff@softnix.com" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition" />
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-zinc-400 mb-1">Password</label>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-3.5 top-3.5 text-zinc-500 text-sm"></i>
+                    <input type="password" id="passwordInput" required value="••••••••" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition" />
+                </div>
+            </div>
+            <button type="submit" class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-red-600/30 transition active:scale-[0.98] text-sm">
+                Sign In to Dashboard
+            </button>
+        </form>
+    </div>
+
+    <script src="scripts/store.js"></script>
+    <script>
+        function quickLogin(role) {
+            const roleMap = {
+                'ADMIN': { email: 'admin@softnix.com', name: 'Rajesh Kumar', page: 'Admin_page/index.html' },
+                'KITCHEN_STAFF': { email: 'kitchen@softnix.com', name: 'Vikram Singh', page: 'kitchen.html' },
+                'SERVER': { email: 'server@softnix.com', name: 'Priya Sharma', page: 'server.html' },
+                'CUSTOMER': { email: 'guest@table5', name: 'Table 5 Guest', page: 'index.html' }
+            };
+
+            const target = roleMap[role] || roleMap['CUSTOMER'];
+            localStorage.setItem('flame_dine_user', JSON.stringify({
+                email: target.email,
+                name: target.name,
+                role: role,
+                branch: 'The Grand Dine'
+            }));
+            window.location.href = target.page;
+        }
+
+        function handleFormLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value.toLowerCase();
+            if (email.includes('admin')) {
+                quickLogin('ADMIN');
+            } else if (email.includes('kitchen') || email.includes('chef')) {
+                quickLogin('KITCHEN_STAFF');
+            } else if (email.includes('server') || email.includes('waiter')) {
+                quickLogin('SERVER');
+            } else {
+                quickLogin('ADMIN');
+            }
+        }
+    </script>
+</body>
+</html>

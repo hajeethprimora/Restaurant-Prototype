@@ -24,6 +24,14 @@
         const pageCart = $('page-cart');
         const pageTracker = $('page-tracker');
         const pageSuccess = $('page-success');
+        
+        const successOrderId = $('successOrderId');
+        const successTable = $('successTable');
+        const successTotal = $('successTotal');
+        const successEstTime = $('successEstTime');
+        const successTrackBtn = $('successTrackBtn');
+        const successBackMenuBtn = $('successBackMenuBtn');
+
         const menuGrid = $('menuGrid');
         const categorySidebar = $('categorySidebar');
         const searchInput = $('searchInput');
@@ -41,9 +49,8 @@
         const itemSheetImg = $('itemSheetImg');
         const itemSheetQty = $('itemSheetQty');
         const itemNote = $('itemNote');
-        const successOrderId = $('successOrderId');
-        const preparingFloating = $('preparingFloating');
         const headerOrderTracker = $('headerOrderTracker');
+        const themeToggleBtn = $('themeToggleBtn');
 
         // Buttons
         const scanBtn = $('scanButton');
@@ -56,34 +63,42 @@
         const orderMoreBtn = $('orderMoreBtn');
         const cartBackBtn = $('cartBackBtn');
         const viewCartBtn = $('viewCartBtn');
-        const trackFromSuccessBtn = $('trackFromSuccessBtn');
-        const orderMoreFromSuccessBtn = $('orderMoreFromSuccessBtn');
 
         // =============================================================
         // CORE NAVIGATION
         // =============================================================
-        function showPage(page) {
-            pageLanding.style.display = 'none';
-            pageMenu.style.display = 'none';
-            pageCart.style.display = 'none';
-            pageTracker.style.display = 'none';
-            pageSuccess.classList.remove('show');
+        const pageRegistry = {
+            landing: { el: pageLanding, display: 'flex' },
+            menu: { el: pageMenu, display: 'block' },
+            cart: { el: pageCart, display: 'block' },
+            tracker: { el: pageTracker, display: 'block' },
+            success: { el: pageSuccess, display: 'flex' }
+        };
 
-            if (page === 'landing') {
-                pageLanding.style.display = 'flex';
-            } else if (page === 'menu') {
-                pageMenu.style.display = 'block';
+        function showPage(page) {
+            const target = pageRegistry[page];
+            if (!target) return;
+
+            Object.values(pageRegistry).forEach(({ el }) => {
+                if (el !== target.el) {
+                    el.classList.remove('page-visible');
+                    el.style.display = 'none';
+                }
+            });
+
+            target.el.style.display = target.display;
+            // Force a reflow so the browser registers the pre-transition state
+            // before the class flip, otherwise the fade/slide-in never plays.
+            void target.el.offsetHeight;
+            requestAnimationFrame(() => target.el.classList.add('page-visible'));
+
+            if (page === 'menu') {
                 renderCategories();
                 renderMenu();
                 updateCartUI();
+                showPreparingToast(currentOrder ? currentOrder.items : []);
             } else if (page === 'cart') {
-                pageCart.style.display = 'block';
                 renderCartPage();
-            } else if (page === 'tracker') {
-                pageTracker.style.display = 'block';
-            } else if (page === 'success') {
-                pageSuccess.classList.add('show');
-                pageSuccess.style.display = 'flex';
             }
         }
 
@@ -96,7 +111,6 @@
                 clearInterval(trackInterval);
                 trackInterval = null;
             }
-            preparingFloating.classList.remove('show');
             showPage('menu');
         }
 
@@ -206,8 +220,12 @@
             const imgUrl = getLocalImagePath(item);
             itemSheetImg.src = imgUrl;
             itemSheetImg.onerror = function() {
-                this.style.display = 'none';
-                this.nextElementSibling.style.display = 'flex';
+                if (this.src.indexOf('unsplash.com') === -1) {
+                    this.src = getDishFallbackImage(item.name);
+                } else {
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                }
             };
             itemSheetImg.style.display = 'block';
             itemSheetImg.nextElementSibling.style.display = 'none';
@@ -316,8 +334,14 @@
 
             const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
 
-            let itemsHtml = cart.map(item => `
+            let itemsHtml = cart.map(item => {
+                const imgUrl = getLocalImagePath(item);
+                return `
                     <div class="cart-item-card fade-in">
+                        <div class="cart-item-img-wrap">
+                            <img src="${imgUrl}" onerror="if (this.src.indexOf('unsplash.com') === -1) { this.src = getDishFallbackImage('${item.name.replace(/'/g, "\\'")}'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }" />
+                            <div class="fallback-emoji" style="display:none;">${item.emoji}</div>
+                        </div>
                         <div class="item-info">
                             <div class="name">${item.name}</div>
                             <div class="meta">₹${item.price} <span class="note">${item.note ? '· ' + item.note : ''}</span></div>
@@ -331,7 +355,8 @@
                             <span class="item-price">₹${item.price * item.qty}</span>
                         </div>
                     </div>
-                `).join('');
+                `;
+            }).join('');
 
             cartContent.innerHTML = `
                     ${itemsHtml}
@@ -378,30 +403,35 @@
         document.querySelector('.cart-status')?.addEventListener('click', goToCartPage);
 
         // =============================================================
-        // PLACE ORDER
+        // PLACE ORDER (Connected to Shared FlameDineStore)
         // =============================================================
         function placeOrder() {
             if (cart.length === 0) return;
-            const orderId = 'FL-' + String(1000 + Math.floor(Math.random() * 9000));
+            
+            const res = window.FlameDineStore.placeOrder({ tableNumber: 5, cartItems: cart });
+            const orderId = res.order.orderCode;
             const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
 
-            const orderItems = cart.map((item, idx) => {
-                let status = 'placed';
-                if (idx % 3 === 1) status = 'preparing';
-                else if (idx % 3 === 2) status = 'ready';
-                return { ...item, status };
-            });
-
-            currentOrder = { id: orderId, items: orderItems, total: total };
+            currentOrder = {
+                id: orderId,
+                items: res.newItems,
+                total: total
+            };
 
             cart = [];
             updateCartUI();
 
-            successOrderId.textContent = orderId;
-            showPage('success');
+            // Populate success page detail fields
+            successOrderId.textContent = '#' + orderId;
+            successTable.textContent = 'Table 5';
+            successTotal.textContent = '₹' + Math.round(total * 1.11);
+            successEstTime.textContent = '10-15 mins';
 
-            // Show preparing floating toast with avatars
-            showPreparingToast(orderItems);
+            // Initialize tracker with live store data
+            renderTracker(orderId, total);
+
+            // Navigate to success page
+            showPage('success');
         }
 
         // =============================================================
@@ -420,7 +450,7 @@
             const toast = $('preparingToast');
             if (!toast) return;
 
-            if (totalActive > 0) {
+            if (prepCountVal > 0) {
                 toast.style.display = 'flex';
                 
                 // Update text counts
@@ -481,22 +511,17 @@
                     orderAvatarsEl.innerHTML = avatarHtml;
                 }
 
-                // Update bottom floating bar
-                preparingFloating.innerHTML = `
-                    <span class="fire-icon"><i class="fas fa-fire"></i></span>
-                    <span><span class="highlight">${prepCountVal}</span> preparing • <span class="highlight-green">${readyCountVal}</span> ready</span>
-                `;
-                preparingFloating.classList.add('show');
             } else {
                 toast.style.display = 'none';
-                preparingFloating.classList.remove('show');
             }
             updateHeaderOrderTracker();
         }
 
         function updateHeaderOrderTracker() {
+            headerOrderTracker.style.display = 'flex'; // Permanent!
             if (!currentOrder) {
-                headerOrderTracker.style.display = 'none';
+                headerOrderTracker.className = 'header-tracker-btn no-active-order';
+                headerOrderTracker.innerHTML = `<i class="fas fa-receipt text-sm mr-1 text-[#666]"></i> No orders`;
                 return;
             }
             const items = currentOrder.items;
@@ -507,7 +532,6 @@
             const totalActive = counts.placed + counts.preparing + counts.ready;
             
             if (totalActive > 0) {
-                headerOrderTracker.style.display = 'flex';
                 if (counts.preparing > 0) {
                     headerOrderTracker.className = 'header-tracker-btn border-blazing-fire';
                     headerOrderTracker.innerHTML = `<i class="fas fa-fire text-sm mr-1"></i> ${counts.preparing} preparing`;
@@ -515,27 +539,16 @@
                     headerOrderTracker.className = 'header-tracker-btn border-glowing-green';
                     headerOrderTracker.innerHTML = `<i class="fas fa-check-circle text-sm mr-1"></i> ${counts.ready} ready!`;
                 } else {
-                    headerOrderTracker.className = 'header-tracker-btn';
-                    headerOrderTracker.innerHTML = `<i class="fas fa-receipt text-sm mr-1"></i> Placed`;
+                    headerOrderTracker.className = 'header-tracker-btn border-glowing-blue';
+                    headerOrderTracker.innerHTML = `<i class="fas fa-receipt text-sm mr-1 text-[#00bcd4]"></i> Placed`;
                 }
             } else {
-                headerOrderTracker.style.display = 'none';
+                headerOrderTracker.className = 'header-tracker-btn';
+                headerOrderTracker.innerHTML = `<i class="fas fa-receipt text-sm mr-1 text-[#aaa]"></i> Order served`;
             }
         }
 
-        // =============================================================
-        // TRACK ORDER FROM SUCCESS
-        // =============================================================
-        trackFromSuccessBtn.addEventListener('click', function() {
-            if (currentOrder) {
-                showPage('tracker');
-                renderTracker(currentOrder.id, currentOrder.total);
-            }
-        });
 
-        orderMoreFromSuccessBtn.addEventListener('click', function() {
-            goBackToMenu();
-        });
 
         // =============================================================
         // ORDER TRACKER
@@ -556,17 +569,42 @@
 
             trackDishStatus.innerHTML = sortedItems.map(item => {
                 const statusClass = item.status;
+                const imgUrl = getLocalImagePath(item);
                 return `
                         <div class="dish-status-item">
-                            <span class="dish-name">${item.name} × ${item.qty}</span>
+                            <div class="status-item-left">
+                                <div class="tracker-item-img-wrap">
+                                    <img src="${imgUrl}" onerror="if (this.src.indexOf('unsplash.com') === -1) { this.src = getDishFallbackImage('${item.name.replace(/'/g, "\\'")}'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }" />
+                                    <div class="fallback-emoji" style="display:none;">${item.emoji}</div>
+                                </div>
+                                <span class="dish-name">${item.name} × ${item.qty}</span>
+                            </div>
                             <span class="dish-status ${statusClass}">${statusClass.charAt(0).toUpperCase() + statusClass.slice(1)}</span>
                         </div>
                     `;
             }).join('');
 
-            trackItems.innerHTML = sortedItems.map(item =>
-                `<div class="flex justify-between"><span>${item.name} × ${item.qty}</span><span>₹${item.price * item.qty}</span></div>`
-            ).join('');
+            trackItems.innerHTML = sortedItems.map(item => {
+                const imgUrl = getLocalImagePath(item);
+                return `
+                    <div class="flex justify-between items-center py-2 border-b border-[#222] last:border-0">
+                        <div class="flex items-center gap-3">
+                            <div class="tracker-summary-img-wrap">
+                                <img src="${imgUrl}" onerror="if (this.src.indexOf('unsplash.com') === -1) { this.src = getDishFallbackImage('${item.name.replace(/'/g, "\\'")}'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }" />
+                                <div class="fallback-emoji" style="display:none;">${item.emoji}</div>
+                            </div>
+                            <span class="font-medium text-white">${item.name} × ${item.qty}</span>
+                        </div>
+                        <span class="font-bold text-white">₹${item.price * item.qty}</span>
+                    </div>
+                `;
+            }).join('');
+
+            const counts = { placed: 0, preparing: 0, ready: 0, served: 0 };
+            currentOrder.items.forEach(item => {
+                if (counts.hasOwnProperty(item.status)) counts[item.status]++;
+            });
+            updateTrackerStepper(counts);
 
             // Simulate status changes
             if (trackInterval) clearInterval(trackInterval);
@@ -599,6 +637,57 @@
             }, 3000);
         }
 
+        function updateTrackerStepper(counts) {
+            const stepPlaced = $('stepPlaced');
+            const stepPreparing = $('stepPreparing');
+            const stepReady = $('stepReady');
+            const stepServed = $('stepServed');
+            const linePlaced = $('linePlaced');
+            const linePreparing = $('linePreparing');
+            const lineReady = $('lineReady');
+            const trackerGeneralBadge = $('trackerGeneralBadge');
+
+            // Reset classes
+            [stepPlaced, stepPreparing, stepReady, stepServed].forEach(el => {
+                if (el) el.className = 'step';
+            });
+            if (stepReady) stepReady.classList.add('ready-step');
+            if (stepServed) stepServed.classList.add('served-step');
+            [linePlaced, linePreparing, lineReady].forEach(el => {
+                if (el) el.className = 'step-line';
+            });
+
+            if (counts.served === currentOrder.items.length) {
+                [stepPlaced, stepPreparing, stepReady, stepServed].forEach(el => el && el.classList.add('active'));
+                [linePlaced, linePreparing, lineReady].forEach(el => el && el.classList.add('active', 'ready-line'));
+                if (trackerGeneralBadge) {
+                    trackerGeneralBadge.textContent = 'Served';
+                    trackerGeneralBadge.className = 'status-badge-tracker served';
+                }
+            } else if (counts.ready > 0 && counts.preparing === 0 && counts.placed === 0) {
+                [stepPlaced, stepPreparing, stepReady].forEach(el => el && el.classList.add('active'));
+                [linePlaced, linePreparing].forEach(el => el && el.classList.add('active', 'ready-line'));
+                if (trackerGeneralBadge) {
+                    trackerGeneralBadge.textContent = 'Ready!';
+                    trackerGeneralBadge.className = 'status-badge-tracker ready';
+                }
+            } else if (counts.preparing > 0 || counts.placed > 0) {
+                if (stepPlaced) stepPlaced.classList.add('active');
+                if (stepPreparing) stepPreparing.classList.add('active');
+                if (linePlaced) linePlaced.classList.add('active');
+                if (trackerGeneralBadge) {
+                    trackerGeneralBadge.textContent = 'Preparing';
+                    trackerGeneralBadge.className = 'status-badge-tracker preparing';
+                }
+            } else {
+                if (stepPlaced) stepPlaced.classList.add('active');
+                if (trackerGeneralBadge) {
+                    trackerGeneralBadge.textContent = 'Placed';
+                    trackerGeneralBadge.className = 'status-badge-tracker placed';
+                }
+            }
+        }
+
         // =============================================================
         // BACK TO MENU FROM TRACKER
         // =============================================================
@@ -623,19 +712,115 @@
         // =============================================================
         searchInput.addEventListener('input', filterItems);
 
+        // Call Waiter Handler
+        const callWaiterBtn = $('callWaiterBtn');
+        if (callWaiterBtn) {
+            callWaiterBtn.addEventListener('click', () => {
+                window.FlameDineStore.callWaiter(5);
+                const notification = document.createElement('div');
+                notification.className = 'order-success-widget show';
+                notification.style.borderColor = 'rgba(234, 179, 8, 0.4)';
+                notification.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
+                notification.innerHTML = `
+                    <div class="success-icon" style="color: #eab308;"><i class="fas fa-hand-paper"></i></div>
+                    <div class="success-details">
+                        <div class="success-title">Waiter Called!</div>
+                        <div class="success-meta">A server has been notified to visit Table 5.</div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 500);
+                }, 3000);
+            });
+        }
+
         headerOrderTracker.addEventListener('click', () => {
-            if (currentOrder) {
+            const session = window.FlameDineStore.getOpenSessionForTable(5);
+            if (session) {
+                const order = window.FlameDineStore.getOrderForSession(session.id);
+                const items = window.FlameDineStore.getOrderItemsForSession(session.id);
+                currentOrder = { id: order ? order.orderCode : 'FL-1042', items, total: items.reduce((s, i) => s + i.price * i.qty, 0) };
                 showPage('tracker');
                 renderTracker(currentOrder.id, currentOrder.total);
+            } else {
+                const notification = document.createElement('div');
+                notification.className = 'order-success-widget show';
+                notification.style.borderColor = 'rgba(255, 85, 0, 0.4)';
+                notification.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 85, 0, 0.15)';
+                notification.innerHTML = `
+                    <div class="success-icon" style="color: #ff5500;"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="success-details">
+                        <div class="success-title">No Active Orders</div>
+                        <div class="success-meta">Add dishes to cart to place one!</div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 500);
+                }, 2500);
+            }
+        });
+
+        successTrackBtn.addEventListener('click', () => {
+            const session = window.FlameDineStore.getOpenSessionForTable(5);
+            if (session) {
+                const order = window.FlameDineStore.getOrderForSession(session.id);
+                const items = window.FlameDineStore.getOrderItemsForSession(session.id);
+                currentOrder = { id: order ? order.orderCode : 'FL-1042', items, total: items.reduce((s, i) => s + i.price * i.qty, 0) };
+            }
+            showPage('tracker');
+        });
+        successBackMenuBtn.addEventListener('click', () => {
+            showPage('menu');
+        });
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            themeToggleBtn.innerHTML = isLight ? `<i class="fas fa-moon"></i>` : `<i class="fas fa-sun"></i>`;
+        });
+
+        // =============================================================
+        // REAL-TIME STORE SUBSCRIPTION
+        // =============================================================
+        window.FlameDineStore.subscribe(event => {
+            const session = window.FlameDineStore.getOpenSessionForTable(5);
+            if (session) {
+                const order = window.FlameDineStore.getOrderForSession(session.id);
+                const items = window.FlameDineStore.getOrderItemsForSession(session.id);
+                currentOrder = { id: order ? order.orderCode : 'FL-1042', items, total: items.reduce((s, i) => s + i.price * i.qty, 0) };
+                showPreparingToast(items);
+                if (pageTracker.style.display === 'block') {
+                    renderTracker(currentOrder.id, currentOrder.total);
+                }
+            } else {
+                currentOrder = null;
+                updateHeaderOrderTracker();
             }
         });
 
         // =============================================================
         // INIT
         // =============================================================
-        headerOrderTracker.style.display = 'none';
+        const initialSession = window.FlameDineStore.getOpenSessionForTable(5);
+        if (initialSession) {
+            const order = window.FlameDineStore.getOrderForSession(initialSession.id);
+            const items = window.FlameDineStore.getOrderItemsForSession(initialSession.id);
+            currentOrder = { id: order ? order.orderCode : 'FL-1042', items, total: items.reduce((s, i) => s + i.price * i.qty, 0) };
+        }
+        updateHeaderOrderTracker();
         showPage('landing');
 
-// Global bindings for inline event handlers
+        // Hold the boot loader for a minimum beat so it reads as a real
+        // loading step rather than a flash, then fade it out.
+        const pageLoader = $('pageLoader');
+        if (pageLoader) {
+            setTimeout(() => {
+                pageLoader.classList.add('loader-hidden');
+            }, 600);
+        }
 
-window.goBackToMenu = goBackToMenu;
+        window.goBackToMenu = goBackToMenu;

@@ -22,12 +22,21 @@ function navigateTo(pageId) {
     navItems.forEach(item => { item.classList.toggle('active', item.dataset.page === pageId); });
     closeModal();
     if (pageId === 'billing') renderBillingFloor();
+    if (pageId === 'menu') renderAdminMenu();
+    if (pageId === 'stations') renderAdminStations();
+    if (pageId === 'tables') renderAdminTables();
+    if (pageId === 'staff') renderAdminStaff();
 }
 
 navItems.forEach(item => {
     item.addEventListener('click', () => {
         const page = item.dataset.page;
-        if (page === 'logout') { if (confirm('Logout from admin panel?')) { alert('🔒 Logged out successfully.'); } return; }
+        if (page === 'logout') {
+            if (confirm('Logout from admin panel?')) {
+                window.location.href = '../login.html';
+            }
+            return;
+        }
         navigateTo(page);
     });
 });
@@ -36,88 +45,6 @@ window.navigateTo = navigateTo;
 // ─── MODAL SYSTEM ────────────────────────────────────────────
 const modalOverlay = document.getElementById('modalOverlay');
 const modalContent = document.getElementById('modalContent');
-
-const MODAL_TEMPLATES = {
-    settleBill: (table, total) => `
-        <div class="modal-header"><h3>Settle Bill</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div style="background:#f8fafc;padding:16px;border-radius:8px;margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Table ${table}</span><span>${total}</span></div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>3x Spring Rolls</span><span>$26.97</span></div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>2x Garlic Bread</span><span>$11.00</span></div>
-            <div style="border-top:1px solid #d1d9e6;padding-top:8px;font-weight:700;display:flex;justify-content:space-between;"><span>Total</span><span>${total}</span></div>
-        </div>
-        <div class="form-group"><label>Payment Method</label><select><option>Cash</option><option>Card</option><option>UPI</option></select></div>
-        <div class="alert-success"><i class="fas fa-check-circle"></i><span>This will close the session and generate a bill.</span></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-success" onclick="closeModal();alert('✅ Bill settled successfully! Session closed.')">Confirm Settlement</button></div>
-    `,
-    addCategory: () => `
-        <div class="modal-header"><h3>Add Category</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>Category Name</label><input type="text" placeholder="e.g. Starters" /></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Category added successfully!')">Save</button></div>
-    `,
-    editCategory: (name) => `
-        <div class="modal-header"><h3>Edit Category</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>Category Name</label><input type="text" value="${name}" /></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Category updated successfully!')">Update</button></div>
-    `,
-    addItem: (category) => `
-        <div class="modal-header"><h3>Add Menu Item</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>Item Name</label><input type="text" placeholder="e.g. Pizza" /></div>
-        <div class="form-group"><label>Price ($)</label><input type="number" placeholder="9.99" /></div>
-        <div class="form-group"><label>Station</label><select><option>Grill</option><option>Beverage</option><option>Desserts</option></select></div>
-        <div class="form-group"><label>Category</label><select><option>${category}</option><option>Starters</option><option>Main Course</option><option>Desserts</option></select></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Item added successfully!')">Save</button></div>
-    `,
-    editItem: (name, price, station) => `
-        <div class="modal-header"><h3>Edit Item</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>Item Name</label><input type="text" value="${name}" /></div>
-        <div class="form-group"><label>Price ($)</label><input type="number" value="${price.replace('$','')}" /></div>
-        <div class="form-group"><label>Station</label><select><option selected>${station}</option><option>Grill</option><option>Beverage</option><option>Desserts</option></select></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Item updated successfully!')">Update</button></div>
-    `,
-    reassignStation: (itemName, currentStation) => `
-        <div class="modal-header"><h3>Reassign Station</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div style="background:#f8fafc;padding:12px;border-radius:8px;margin-bottom:16px;"><strong>${itemName}</strong> is currently in <span class="badge badge-blue">${currentStation}</span></div>
-        <div class="form-group"><label>New Station</label><select><option ${currentStation==='Grill'?'selected':''}>Grill</option><option ${currentStation==='Beverage'?'selected':''}>Beverage</option><option ${currentStation==='Desserts'?'selected':''}>Desserts</option></select></div>
-        <div class="alert-info"><i class="fas fa-info-circle"></i><span>This only affects <strong>future orders</strong>. Existing orders will still go to the original station.</span></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Station reassigned!')">Reassign</button></div>
-    `,
-    addStation: () => `
-        <div class="modal-header"><h3>Add Station</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>Station Name</label><input type="text" placeholder="e.g. Pizza Station" /></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Station added successfully!')">Save</button></div>
-    `,
-    editStation: (name) => `
-        <div class="modal-header"><h3>Edit Station</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>Station Name</label><input type="text" value="${name}" /></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Station updated successfully!')">Update</button></div>
-    `,
-    addTable: () => `
-        <div class="modal-header"><h3>Add Table</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>Table Number</label><input type="text" placeholder="e.g. 6" /></div>
-        <div class="form-group"><label>Status</label><select><option>Active</option><option>Inactive</option></select></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Table added! QR code generated.')">Save</button></div>
-    `,
-    editTable: (number, status) => `
-        <div class="modal-header"><h3>Edit Table</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>Table Number</label><input type="text" value="${number}" /></div>
-        <div class="form-group"><label>Status</label><select><option ${status==='Active'?'selected':''}>Active</option><option ${status==='Inactive'?'selected':''}>Inactive</option></select></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Table updated successfully!')">Update</button></div>
-    `,
-    regenerateQR: (table, token) => `
-        <div class="modal-header"><h3>Regenerate QR Code</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="qr-preview" id="qrPreview"><i class="fas fa-qrcode"></i><p style="margin-top:8px;font-size:13px;color:#64748b;">Current QR for ${table}</p><span class="token" id="oldToken">${token}</span></div>
-        <div class="alert-warning"><i class="fas fa-exclamation-triangle"></i><span>Regenerating will invalidate the old QR. Customers using the old QR will need a new one.</span></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="regenerateQR('${table}')"><i class="fas fa-qrcode"></i> Regenerate QR</button></div>
-    `,
-    assignRole: () => `
-        <div class="modal-header"><h3>Assign Role</h3><button class="close" onclick="closeModal()">&times;</button></div>
-        <div class="form-group"><label>User</label><select><option>Rajesh Kumar</option><option selected>Priya Sharma</option><option>Vikram Singh</option><option>Ananya Reddy</option><option>Deepak Gupta</option></select></div>
-        <div class="form-group"><label>Role</label><select><option>Admin</option><option>Server</option><option>Kitchen Staff</option></select></div>
-        <div class="alert-info"><i class="fas fa-info-circle"></i><span>User will have access to the assigned dashboard and permissions.</span></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Role assigned successfully!')">Assign</button></div>
-    `
-};
 
 function openModal(templateKey, ...args) {
     const template = MODAL_TEMPLATES[templateKey];
@@ -136,34 +63,202 @@ window.closeModal = closeModal;
 modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-// ─── DINING TABLE FLOOR (BILLING) ───────────────────────────
-const TABLE_SESSIONS = [
-    { table: 5, session: '#S-0421', items: 6, total: 84.50, status: 'ready', statusLabel: '3 ready' },
-    { table: 12, session: '#S-0418', items: 9, total: 142.00, status: 'served', statusLabel: 'All served' },
-    { table: 3, session: '#S-0423', items: 4, total: 56.00, status: 'delayed', statusLabel: 'Delayed' },
-    { table: 7, session: '#S-0415', items: 2, total: 28.50, status: 'served', statusLabel: 'All served' },
-    { table: 9, session: '#S-0422', items: 5, total: 67.00, status: 'ready', statusLabel: '2 ready' },
-];
-const EMPTY_TABLES = [1, 2, 4, 6, 8, 10, 11];
+// MODAL TEMPLATES WITH REAL STORE BINDINGS
+const MODAL_TEMPLATES = {
+    settleBillModal: (tableNum) => {
+        tableNum = parseInt(tableNum);
+        const session = window.FlameDineStore.getOpenSessionForTable(tableNum);
+        if (!session) return `<div>No active session</div>`;
+        const items = window.FlameDineStore.getOrderItemsForSession(session.id).filter(i => i.status !== 'cancelled');
+        const subtotal = items.reduce((s, i) => s + (i.price * i.qty), 0);
+        const sst = Math.round(subtotal * 0.06 * 100) / 100;
+        const svc = Math.round(subtotal * 0.05 * 100) / 100;
+        const total = Math.round((subtotal + sst + svc) * 100) / 100;
 
-const TABLE_HISTORY = {
-    5: [
-        { bill: '#B-0390', date: 'Aug 5, 2026', total: 62.00, method: 'Cash' },
-        { bill: '#B-0355', date: 'Aug 2, 2026', total: 45.50, method: 'Card' },
-    ],
-    12: [
-        { bill: '#B-0401', date: 'Aug 6, 2026', total: 98.00, method: 'UPI' },
-    ],
-    3: [
-        { bill: '#B-0312', date: 'Jul 30, 2026', total: 39.00, method: 'Cash' },
-        { bill: '#B-0288', date: 'Jul 25, 2026', total: 71.20, method: 'Card' },
-        { bill: '#B-0260', date: 'Jul 20, 2026', total: 52.00, method: 'Cash' },
-    ],
-    7: [],
-    9: [
-        { bill: '#B-0398', date: 'Aug 6, 2026', total: 33.50, method: 'UPI' },
-    ],
+        const itemsListHtml = items.map(i => `
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
+                <span>${i.qty}x ${i.name}</span>
+                <span>₹${i.price * i.qty}</span>
+            </div>
+        `).join('');
+
+        return `
+            <div class="modal-header"><h3>Settle Bill &middot; Table ${tableNum}</h3><button class="close" onclick="closeModal()">&times;</button></div>
+            <div style="background:#f8fafc;padding:16px;border-radius:10px;margin-bottom:16px;border:1px solid #e2e8f0;">
+                <div style="font-weight:700;margin-bottom:8px;border-bottom:1px solid #cbd5e1;padding-bottom:6px;">Itemized Order Summary</div>
+                ${itemsListHtml}
+                <div style="border-top:1px solid #cbd5e1;margin-top:8px;padding-top:8px;" id="settlementCalcArea">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;"><span>Subtotal</span><span>₹${subtotal}</span></div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;"><span>Discount</span><span id="calcDiscountText">-₹0</span></div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;"><span>SST (6%)</span><span id="calcSstText">₹${sst}</span></div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;"><span>Service Tax (5%)</span><span id="calcSvcText">₹${svc}</span></div>
+                    <div style="border-top:1px solid #cbd5e1;padding-top:6px;margin-top:6px;font-weight:800;font-size:16px;display:flex;justify-content:space-between;color:#18181b;">
+                        <span>Final Bill Amount</span><span id="calcFinalTotalText" style="color:#e53935;">₹${total}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Discount Amount (₹)</label>
+                <input type="number" id="discountInput" placeholder="0" min="0" oninput="updateSettlementCalc(${subtotal})" />
+            </div>
+
+            <div class="form-group">
+                <label>Payment Method</label>
+                <select id="paymentMethodSelect">
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Credit/Debit Card</option>
+                    <option value="UPI">UPI / Digital Wallet</option>
+                    <option value="UNPAID">UNPAID (Walkout Override)</option>
+                </select>
+            </div>
+
+            <div class="alert-info"><i class="fas fa-info-circle"></i><span>Settles session and moves table to available state.</span></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-success" onclick="executeSettlement(${tableNum})"><i class="fas fa-check-circle"></i> Confirm Settlement</button>
+            </div>
+        `;
+    },
+
+    correctPaymentModal: (billId) => `
+        <div class="modal-header"><h3>Correct Payment Method</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="alert-warning"><i class="fas fa-exclamation-triangle"></i><span>Void and replace original bill record with corrected payment details.</span></div>
+        <div class="form-group"><label>New Payment Method</label>
+            <select id="newPaymentSelect">
+                <option value="Cash">Cash</option>
+                <option value="Card">Credit / Debit Card</option>
+                <option value="UPI">UPI / Digital Wallet</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Reason for Correction</label>
+            <input type="text" id="correctionReasonInput" placeholder="e.g. Customer originally selected cash but paid via card" required />
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-danger" onclick="executePaymentCorrection('${billId}')">Void &amp; Replace Bill</button>
+        </div>
+    `,
+
+    addCategory: () => `
+        <div class="modal-header"><h3>Add Category</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="form-group"><label>Category Name</label><input type="text" id="catNameInput" placeholder="e.g. Snacks" /></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Category saved.')">Save</button></div>
+    `,
+
+    addItem: (category) => `
+        <div class="modal-header"><h3>Add Menu Item</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="form-group"><label>Item Name</label><input type="text" id="itemNameInput" placeholder="e.g. Pasta Alfredo" /></div>
+        <div class="form-group"><label>Price (₹)</label><input type="number" id="itemPriceInput" placeholder="199" /></div>
+        <div class="form-group"><label>Category</label><select id="itemCatSelect"><option>${category || 'Starters'}</option><option>Starters</option><option>Main Course</option><option>Beverages</option><option>Desserts</option></select></div>
+        <div class="form-group"><label>Kitchen Station</label><select id="itemStationSelect"><option>Grill</option><option>Beverage</option><option>Desserts</option><option>Main Kitchen</option></select></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeSaveItem()">Save Item</button></div>
+    `,
+
+    reassignStation: (itemId, currentStation) => `
+        <div class="modal-header"><h3>Reassign Station</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div style="background:#f8fafc;padding:12px;border-radius:8px;margin-bottom:16px;">Currently routed to <span class="badge badge-blue">${currentStation}</span></div>
+        <div class="form-group"><label>New Station</label>
+            <select id="newStationSelect">
+                <option value="Grill">Grill</option>
+                <option value="Beverage">Beverage</option>
+                <option value="Desserts">Desserts</option>
+                <option value="Main Kitchen">Main Kitchen</option>
+            </select>
+        </div>
+        <div class="alert-info"><i class="fas fa-info-circle"></i><span>Takes effect for future orders.</span></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeReassignStation(${itemId})">Reassign</button></div>
+    `,
+
+    addStation: () => `
+        <div class="modal-header"><h3>Add Kitchen Station</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="form-group"><label>Station Name</label><input type="text" id="stationNameInput" placeholder="e.g. Bakery Station" /></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeSaveStation()">Save Station</button></div>
+    `,
+
+    addTable: () => `
+        <div class="modal-header"><h3>Add Table</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="form-group"><label>Table Number</label><input type="number" placeholder="13" /></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Table added!')">Save</button></div>
+    `,
+
+    regenerateQR: (tableNum, token) => `
+        <div class="modal-header"><h3>Regenerate QR Code &middot; Table ${tableNum}</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="qr-preview" id="qrPreview"><i class="fas fa-qrcode"></i><p style="margin-top:8px;font-size:13px;color:#64748b;">Current Token for Table ${tableNum}</p><span class="token" id="oldToken">${token}</span></div>
+        <div class="alert-warning"><i class="fas fa-exclamation-triangle"></i><span>Invalidates old QR token immediately.</span></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="executeRegenerateQR(${tableNum})"><i class="fas fa-qrcode"></i> Regenerate Token</button></div>
+    `,
+
+    assignRole: () => `
+        <div class="modal-header"><h3>Assign Staff Role</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="form-group"><label>Staff Member</label><select id="staffUserSelect"><option value="priya@softnix.com">Priya Sharma</option><option value="vikram@softnix.com">Vikram Singh</option><option value="rajesh@softnix.com">Rajesh Kumar</option></select></div>
+        <div class="form-group"><label>Role</label><select id="staffRoleSelect"><option value="ADMIN">Admin</option><option value="SERVER">Server</option><option value="KITCHEN_STAFF">Kitchen Staff</option></select></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeAssignRole()">Save Role</button></div>
+    `
 };
+
+// ─── BILLING FLOOR & HISTORY ──────────────────────────────────
+function renderBillingFloor() {
+    const grid = document.getElementById('billingFloorGrid');
+    if (!grid) return;
+
+    const tables = window.FlameDineStore.getTables();
+    const allItems = window.FlameDineStore.load().orderItems || [];
+
+    grid.innerHTML = tables.map(t => {
+        const session = window.FlameDineStore.getOpenSessionForTable(t.number);
+        const sessionItems = session ? window.FlameDineStore.getOrderItemsForSession(session.id) : [];
+        const hasSession = !!session;
+
+        const readyCount = sessionItems.filter(i => i.status === 'ready').length;
+        const servedCount = sessionItems.filter(i => i.status === 'served').length;
+        const total = sessionItems.reduce((s, i) => s + i.price * i.qty, 0);
+
+        let statusClass = 'empty';
+        let statusLabel = 'Available';
+
+        if (hasSession) {
+            if (readyCount > 0) {
+                statusClass = 'ready';
+                statusLabel = `${readyCount} ready`;
+            } else if (servedCount === sessionItems.length && sessionItems.length > 0) {
+                statusClass = 'served';
+                statusLabel = 'All served';
+            } else {
+                statusClass = 'delayed';
+                statusLabel = 'Preparing';
+            }
+        }
+
+        const popover = hasSession ? `
+            <div class="table-popover">
+                <div class="popover-header">Table ${t.number} <span class="badge ${statusBadgeClass(statusClass)}">${statusLabel}</span></div>
+                <div class="popover-row"><span>Session</span><span>${session.id.substring(0, 10)}</span></div>
+                <div class="popover-row"><span>Items</span><span>${sessionItems.length}</span></div>
+                <div class="popover-row total"><span>Total</span><span>₹${total}</span></div>
+            </div>
+        ` : `
+            <div class="table-popover">
+                <div class="popover-header">Table ${t.number}</div>
+                <div class="popover-empty">No active session</div>
+            </div>
+        `;
+
+        return `
+            <div class="dining-table-wrap">
+                <div class="dining-table status-${statusClass}" onclick="openBillingHistory(${t.number})">
+                    <span class="chair chair-top"></span>
+                    <span class="chair chair-bottom"></span>
+                    <span class="chair chair-left"></span>
+                    <span class="chair chair-right"></span>
+                    <div class="table-number">${t.number}</div>
+                    ${hasSession ? '<div class="table-status-dot"></div>' : ''}
+                </div>
+                ${popover}
+            </div>
+        `;
+    }).join('');
+}
 
 function statusBadgeClass(status) {
     if (status === 'ready') return 'badge-yellow';
@@ -172,76 +267,55 @@ function statusBadgeClass(status) {
     return 'badge-gray';
 }
 
-function diningTableTile(t) {
-    const hasSession = !!t.session;
-    const popover = hasSession ? `
-        <div class="table-popover">
-            <div class="popover-header">Table ${t.table} <span class="badge ${statusBadgeClass(t.status)}">${t.statusLabel}</span></div>
-            <div class="popover-row"><span>Session</span><span>${t.session}</span></div>
-            <div class="popover-row"><span>Items</span><span>${t.items}</span></div>
-            <div class="popover-row total"><span>Total</span><span>$${t.total.toFixed(2)}</span></div>
-        </div>
-    ` : `
-        <div class="table-popover">
-            <div class="popover-header">Table ${t.table}</div>
-            <div class="popover-empty">No active session</div>
-        </div>
-    `;
-    return `
-        <div class="dining-table-wrap">
-            <div class="dining-table status-${t.status}" onclick="openBillingHistory(${t.table})">
-                <span class="chair chair-top"></span>
-                <span class="chair chair-bottom"></span>
-                <span class="chair chair-left"></span>
-                <span class="chair chair-right"></span>
-                <div class="table-number">${t.table}</div>
-                ${hasSession ? '<div class="table-status-dot"></div>' : ''}
-            </div>
-            ${popover}
-        </div>
-    `;
-}
-
-function renderBillingFloor() {
-    const grid = document.getElementById('billingFloorGrid');
-    if (!grid) return;
-    let html = '';
-    TABLE_SESSIONS.forEach(t => { html += diningTableTile(t); });
-    EMPTY_TABLES.forEach(num => { html += diningTableTile({ table: num, status: 'empty' }); });
-    grid.innerHTML = html;
-}
-
 function renderBillingHistory(tableNumber) {
-    const session = TABLE_SESSIONS.find(t => t.table === tableNumber);
-    const history = TABLE_HISTORY[tableNumber] || [];
+    tableNumber = parseInt(tableNumber);
+    const session = window.FlameDineStore.getOpenSessionForTable(tableNumber);
+    const bills = window.FlameDineStore.getBills().filter(b => b.tableNumber === tableNumber);
     const title = document.getElementById('billingHistoryTitle');
     if (title) title.textContent = 'Table ' + tableNumber;
 
     let html = '';
     if (session) {
+        const items = window.FlameDineStore.getOrderItemsForSession(session.id);
+        const total = items.reduce((s, i) => s + (i.price * i.qty), 0);
+        const unfulfilled = items.filter(i => !['served', 'cancelled'].includes(i.status)).length;
+
         html += `
             <div class="card" style="margin-bottom:20px;">
-                <div class="card-title"><span><i class="fas fa-receipt" style="color:#2563eb;margin-right:6px;"></i> Current Open Session</span></div>
+                <div class="card-title"><span><i class="fas fa-receipt" style="color:#E53935;margin-right:6px;"></i> Current Open Session</span></div>
                 <div style="background:#f8fafc;padding:16px;border-radius:8px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Session</span><strong>${session.session}</strong></div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Items</span><strong>${session.items}</strong></div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Status</span><span class="badge ${statusBadgeClass(session.status)}">${session.statusLabel}</span></div>
-                    <div style="display:flex;justify-content:space-between;border-top:1px solid #d1d9e6;padding-top:8px;font-weight:700;"><span>Total</span><span>$${session.total.toFixed(2)}</span></div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Session ID</span><strong>${session.id.substring(0, 14)}</strong></div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Active Items</span><strong>${items.length} item(s) (${unfulfilled} unfulfilled)</strong></div>
+                    <div style="display:flex;justify-content:space-between;border-top:1px solid #d1d9e6;padding-top:8px;font-weight:700;"><span>Subtotal</span><span>₹${total}</span></div>
                 </div>
-                <button class="btn btn-success" style="margin-top:14px;width:100%;justify-content:center;" onclick="openModal('settleBill','Table ${tableNumber}','$${session.total.toFixed(2)}')"><i class="fas fa-check-circle"></i> Settle This Bill</button>
+                <button class="btn btn-success" style="margin-top:14px;width:100%;justify-content:center;" onclick="openModal('settleBillModal', ${tableNumber})">
+                    <i class="fas fa-check-circle"></i> Settle Bill &amp; Close Session
+                </button>
             </div>
         `;
     } else {
-        html += `<div class="alert-info" style="margin-bottom:20px;"><i class="fas fa-info-circle"></i><span>No active session right now for this table.</span></div>`;
+        html += `<div class="alert-info" style="margin-bottom:20px;"><i class="fas fa-info-circle"></i><span>No active session right now for Table ${tableNumber}.</span></div>`;
     }
 
-    html += `<div class="card-title" style="margin:0 0 12px;"><span><i class="fas fa-clock-rotate-left" style="color:#64748b;margin-right:6px;"></i> Past Bills</span></div>`;
-    if (history.length === 0) {
+    html += `<div class="card-title" style="margin:0 0 12px;"><span><i class="fas fa-clock-rotate-left" style="color:#64748b;margin-right:6px;"></i> Past Settled Bills</span></div>`;
+    if (bills.length === 0) {
         html += `<div class="card" style="text-align:center;color:#94a3b8;padding:32px;">No billing history yet for this table.</div>`;
     } else {
-        html += `<div class="table-wrap"><table><thead><tr><th>Bill</th><th>Date</th><th>Total</th><th>Payment</th></tr></thead><tbody>`;
-        history.forEach(h => {
-            html += `<tr><td><strong>${h.bill}</strong></td><td>${h.date}</td><td>$${h.total.toFixed(2)}</td><td>${h.method}</td></tr>`;
+        html += `<div class="table-wrap"><table><thead><tr><th>Bill Code</th><th>Date</th><th>Method</th><th>Total</th><th>Status</th><th>Action</th></tr></thead><tbody>`;
+        bills.forEach(b => {
+            const isVoid = b.status === 'VOIDED';
+            html += `
+                <tr style="${isVoid ? 'opacity:0.5;text-decoration:line-through;' : ''}">
+                    <td><strong>${b.billCode}</strong></td>
+                    <td>${new Date(b.settledAt).toLocaleDateString()}</td>
+                    <td><span class="badge badge-blue">${b.paymentMethod}</span></td>
+                    <td><strong>₹${b.finalTotal}</strong></td>
+                    <td><span class="badge ${isVoid ? 'badge-red' : 'badge-green'}">${b.status}</span></td>
+                    <td>
+                        ${!isVoid && b.paymentMethod !== 'UNPAID' ? `<button class="btn btn-xs btn-outline" onclick="openModal('correctPaymentModal', '${b.id}')">Correct Payment</button>` : '—'}
+                    </td>
+                </tr>
+            `;
         });
         html += `</tbody></table></div>`;
     }
@@ -258,71 +332,249 @@ function openBillingHistory(tableNumber) {
     closeModal();
 }
 window.openBillingHistory = openBillingHistory;
+window.backToBilling = function() { navigateTo('billing'); };
 
-function backToBilling() {
-    navigateTo('billing');
-}
-window.backToBilling = backToBilling;
+// SETTLEMENT HELPER CALCULATOR
+window.updateSettlementCalc = function (subtotal) {
+    const discVal = parseFloat(document.getElementById('discountInput')?.value || 0) || 0;
+    const discount = Math.min(subtotal, Math.max(0, discVal));
+    const taxable = subtotal - discount;
+    const sst = Math.round(taxable * 0.06 * 100) / 100;
+    const svc = Math.round(taxable * 0.05 * 100) / 100;
+    const total = Math.round((taxable + sst + svc) * 100) / 100;
 
-// ─── REGENERATE QR ─────────────────────────────────────────
-function regenerateQR(table) {
-    const newToken = 'qr_' + Math.random().toString(36).substring(2, 10) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6);
-    const oldTokenEl = document.getElementById('oldToken');
-    if (oldTokenEl) { oldTokenEl.textContent = 'NEW: ' + newToken; oldTokenEl.style.color = '#16a34a'; oldTokenEl.style.fontWeight = 'bold'; }
-    const preview = document.getElementById('qrPreview');
-    if (preview) {
-        const success = document.createElement('div');
-        success.className = 'alert-success';
-        success.style.marginTop = '12px';
-        success.innerHTML = `<i class="fas fa-check-circle"></i> New QR code generated for ${table}!`;
-        preview.appendChild(success);
+    document.getElementById('calcDiscountText').textContent = `-₹${discount}`;
+    document.getElementById('calcSstText').textContent = `₹${sst}`;
+    document.getElementById('calcSvcText').textContent = `₹${svc}`;
+    document.getElementById('calcFinalTotalText').textContent = `₹${total}`;
+};
+
+window.executeSettlement = function (tableNum) {
+    const discountAmount = parseFloat(document.getElementById('discountInput')?.value || 0) || 0;
+    const paymentMethod = document.getElementById('paymentMethodSelect')?.value || 'Cash';
+
+    const res = window.FlameDineStore.settleSession(tableNum, { paymentMethod, discountAmount, staffName: 'Rajesh Kumar (Admin)' });
+    if (res.success) {
+        closeModal();
+        alert(`✅ Bill ${res.bill.billCode} settled successfully via ${res.bill.paymentMethod}!\nFinal Amount: ₹${res.bill.finalTotal}`);
+        renderBillingFloor();
+        if (pages['billing-history']?.classList.contains('active')) renderBillingHistory(tableNum);
+    } else {
+        alert(`⚠️ ${res.message}`);
     }
-    const btns = document.querySelectorAll('.modal-actions .btn-danger');
-    btns.forEach(b => { b.disabled = true; b.textContent = '✅ Done'; });
-    setTimeout(() => { closeModal(); alert('✅ QR code regenerated successfully!\nNew token: ' + newToken); }, 1200);
-}
-window.regenerateQR = regenerateQR;
+};
 
-// ─── TOGGLE AVAILABILITY ────────────────────────────────────
-function toggleAvailability(el) {
-    el.classList.toggle('active');
-    const label = el.querySelector('.label');
-    if (el.classList.contains('active')) { label.textContent = 'Active'; label.style.color = '#166534'; const row = el.closest('.menu-item-row'); if (row) row.style.borderLeft = '3px solid #22c55e'; }
-    else { label.textContent = 'Inactive'; label.style.color = '#991b1b'; const row = el.closest('.menu-item-row'); if (row) row.style.borderLeft = '3px solid #ef4444'; }
-}
-window.toggleAvailability = toggleAvailability;
+window.executePaymentCorrection = function (billId) {
+    const newMethod = document.getElementById('newPaymentSelect')?.value;
+    const reason = document.getElementById('correctionReasonInput')?.value;
+    if (!reason) { alert('Please provide a reason for payment correction.'); return; }
 
-// ─── DELETE CATEGORY ────────────────────────────────────────
-function deleteCategory(categoryName, itemCount) {
-    if (itemCount > 0) { alert(`⚠️ Cannot delete "${categoryName}" because it contains ${itemCount} item(s).\n\nPlease move or delete the items first.`); return; }
-    if (confirm(`⚠️ Are you sure you want to delete the category "${categoryName}"?`)) { alert(`🗑️ Category "${categoryName}" deleted successfully.`); }
-}
-window.deleteCategory = deleteCategory;
+    const res = window.FlameDineStore.correctPaymentMethod(billId, newMethod, reason);
+    if (res.success) {
+        closeModal();
+        alert(`✅ Original bill voided and replaced with new bill ${res.replacementBill.billCode} (${newMethod}).`);
+        navigateTo('billing');
+    } else {
+        alert(`⚠️ ${res.message}`);
+    }
+};
 
-// ─── DELETE STATION ─────────────────────────────────────────
-function deleteStation(stationName, itemCount) {
-    if (itemCount > 0) { alert(`⚠️ Cannot delete "${stationName}" because ${itemCount} menu item(s) are assigned to it.\n\nPlease reassign or delete the items first.`); return; }
-    if (confirm(`⚠️ Are you sure you want to delete the station "${stationName}"?`)) { alert(`🗑️ Station "${stationName}" deleted successfully.`); }
-}
-window.deleteStation = deleteStation;
+// ─── ADMIN MENU & STATIONS ────────────────────────────────────
+function renderAdminMenu() {
+    const items = window.FlameDineStore.getMenuItems();
+    const categories = window.FlameDineStore.getCategories();
+    const container = document.getElementById('page-menu');
+    if (!container) return;
 
-// ─── CONFIRM DELETE ─────────────────────────────────────────
-function confirmDelete(type, name) {
-    const displayName = name || type;
-    if (confirm(`⚠️ Are you sure you want to delete this ${type.toLowerCase()}?`)) { alert(`🗑️ ${type} "${displayName}" deleted successfully.`); }
-}
-window.confirmDelete = confirmDelete;
+    let html = `
+        <div class="page-header">
+            <div><h1>Menu Management</h1><div class="sub">Categories, items, pricing, station routing &amp; availability</div></div>
+            <div class="actions"><button class="btn btn-primary" onclick="openModal('addItem')"><i class="fas fa-plus"></i> Add Item</button></div>
+        </div>
+    `;
 
-// ─── BAR CHART ANIMATION ────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    const bars = document.querySelectorAll('.bar');
-    bars.forEach((bar, i) => {
-        const height = parseInt(bar.style.height);
-        bar.style.height = '4px';
-        setTimeout(() => { bar.style.height = height + 'px'; }, 100 + (i * 80));
+    categories.forEach(cat => {
+        const catItems = items.filter(i => i.category === cat);
+        html += `
+            <div class="menu-group">
+                <div class="group-header">
+                    <h3>${cat} <span class="count">(${catItems.length} items)</span></h3>
+                    <div style="display:flex;gap:6px;">
+                        <button class="btn btn-sm btn-primary" onclick="openModal('addItem','${cat}')"><i class="fas fa-plus"></i> Add Item</button>
+                    </div>
+                </div>
+        `;
+        catItems.forEach(i => {
+            html += `
+                <div class="menu-item-row" style="border-left:${i.available ? '3px solid #22c55e' : '3px solid #ef4444'};">
+                    <div class="item-info">
+                        <span style="font-size:18px;">${i.emoji}</span>
+                        <span class="name">${i.name}</span>
+                        <span class="badge badge-blue">${i.station}</span>
+                        <span class="price">₹${i.price}</span>
+                    </div>
+                    <div class="item-actions">
+                        <div class="toggle-switch ${i.available ? 'active' : ''}" onclick="window.FlameDineStore.toggleItemAvailability(${i.id});renderAdminMenu();">
+                            <span class="track"><span class="thumb"></span></span>
+                            <span class="label">${i.available ? 'Active' : 'Inactive'}</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="openModal('reassignStation', ${i.id}, '${i.station}')"><i class="fas fa-arrows-left-right"></i> Station</button>
+                        <button class="btn btn-sm btn-danger" onclick="executeDeleteItem(${i.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+        html += `</div>`;
     });
+
+    container.innerHTML = html;
+}
+
+window.executeSaveItem = function () {
+    const name = document.getElementById('itemNameInput')?.value;
+    const price = document.getElementById('itemPriceInput')?.value;
+    const category = document.getElementById('itemCatSelect')?.value;
+    const station = document.getElementById('itemStationSelect')?.value;
+    if (!name || !price) { alert('Please enter name and price'); return; }
+
+    window.FlameDineStore.saveMenuItem({ name, price, category, station });
+    closeModal();
+    renderAdminMenu();
+};
+
+window.executeReassignStation = function (itemId) {
+    const newStation = document.getElementById('newStationSelect')?.value;
+    window.FlameDineStore.reassignItemStation(itemId, newStation);
+    closeModal();
+    renderAdminMenu();
+};
+
+window.executeDeleteItem = function (itemId) {
+    if (confirm('Delete this menu item?')) {
+        window.FlameDineStore.deleteMenuItem(itemId);
+        renderAdminMenu();
+    }
+};
+
+function renderAdminStations() {
+    const stations = window.FlameDineStore.getStations();
+    const items = window.FlameDineStore.getMenuItems();
+    const container = document.getElementById('page-stations');
+    if (!container) return;
+
+    let html = `
+        <div class="page-header"><div><h1>Stations</h1><div class="sub">Kitchen sections where menu items are routed</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('addStation')"><i class="fas fa-plus"></i> Station</button></div></div>
+        <div class="grid-cards">
+    `;
+
+    stations.forEach(st => {
+        const stItems = items.filter(i => i.station === st.name);
+        html += `
+            <div class="card-item">
+                <div class="card-header"><h4><i class="fas ${st.icon || 'fa-fire'}" style="color:#f59e0b;margin-right:8px;"></i>${st.name}</h4><span class="badge badge-gray">${stItems.length} items</span></div>
+                <div class="card-body">Items: ${stItems.map(i => i.name).join(', ') || 'None assigned'}</div>
+                <div class="card-actions">
+                    <button class="btn btn-sm btn-danger" onclick="executeDeleteStation('${st.name}')"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `<div class="card-empty" onclick="openModal('addStation')"><i class="fas fa-plus-circle"></i><span>Add New Station</span></div></div>`;
+    container.innerHTML = html;
+}
+
+window.executeSaveStation = function () {
+    const name = document.getElementById('stationNameInput')?.value;
+    if (name) {
+        window.FlameDineStore.saveStation(name);
+        closeModal();
+        renderAdminStations();
+    }
+};
+
+window.executeDeleteStation = function (name) {
+    if (confirm(`Delete station "${name}"?`)) {
+        window.FlameDineStore.deleteStation(name);
+        renderAdminStations();
+    }
+};
+
+function renderAdminTables() {
+    const tables = window.FlameDineStore.getTables();
+    const container = document.getElementById('page-tables');
+    if (!container) return;
+
+    let html = `
+        <div class="page-header"><div><h1>Tables &amp; QR Tokens</h1><div class="sub">Manage table QR tokens</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('addTable')"><i class="fas fa-plus"></i> Add Table</button></div></div>
+        <div class="grid-cards">
+    `;
+
+    tables.forEach(t => {
+        html += `
+            <div class="card-item">
+                <div class="card-header"><h4><i class="fas fa-qrcode" style="color:#E53935;margin-right:8px;"></i>Table ${t.number}</h4><span class="badge badge-green">Active</span></div>
+                <div class="card-body"><div style="font-size:11px;color:#94a3b8;font-family:monospace;word-break:break-all;">Token: ${t.token}</div></div>
+                <div class="card-actions">
+                    <button class="btn btn-sm btn-outline" onclick="openModal('regenerateQR', ${t.number}, '${t.token}')"><i class="fas fa-qrcode"></i> Regenerate QR</button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+window.executeRegenerateQR = function (tableNum) {
+    const newToken = window.FlameDineStore.regenerateTableQR(tableNum);
+    alert(`✅ Token regenerated for Table ${tableNum}:\n${newToken}`);
+    closeModal();
+    renderAdminTables();
+};
+
+function renderAdminStaff() {
+    const staff = window.FlameDineStore.getStaffUsers();
+    const container = document.getElementById('page-staff');
+    if (!container) return;
+
+    let html = `
+        <div class="page-header"><div><h1>Staff Management</h1><div class="sub">Assign staff roles</div></div><div class="actions"><button class="btn btn-primary" onclick="openModal('assignRole')"><i class="fas fa-user-plus"></i> Assign Role</button></div></div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Branch</th></tr></thead>
+                <tbody>
+    `;
+
+    staff.forEach(s => {
+        html += `
+            <tr>
+                <td><strong>${s.name}</strong></td>
+                <td>${s.email}</td>
+                <td><span class="badge ${s.role === 'ADMIN' ? 'badge-purple' : s.role === 'SERVER' ? 'badge-green' : 'badge-blue'}">${s.role}</span></td>
+                <td>${s.branch}</td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table></div>`;
+    container.innerHTML = html;
+}
+
+window.executeAssignRole = function () {
+    const email = document.getElementById('staffUserSelect')?.value;
+    const role = document.getElementById('staffRoleSelect')?.value;
+    window.FlameDineStore.assignStaffRole(email, role);
+    closeModal();
+    renderAdminStaff();
+};
+
+// ─── INIT & STORE SUBSCRIPTION ──────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    window.FlameDineStore.subscribe(event => {
+        renderBillingFloor();
+    });
+    renderBillingFloor();
 });
 
-console.log('📊 Enhanced Admin Dashboard with Full Mock Data loaded successfully.');
-console.log('📈 Pages: Dashboard, Billing, Menu, Stations, Tables, Staff, Print Settings.');
-console.log('✅ All pages populated with realistic mock data.');
+console.log('✅ Admin Panel successfully connected to FlameDineStore.');

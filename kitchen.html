@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Flame Dine – Kitchen Display System (KDS)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #09090b; color: #f4f4f5; }
+        .kds-header { background: #18181b; border-bottom: 1px solid #27272a; }
+        .station-tab {
+            padding: 8px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.05);
+            color: #a1a1aa;
+            border: 1px solid transparent;
+        }
+        .station-tab.active {
+            background: #ff3d00;
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(255, 61, 0, 0.35);
+        }
+        .order-card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 18px;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+        .order-card.status-placed { border-color: rgba(59, 130, 246, 0.4); }
+        .order-card.status-claimed { border-color: rgba(234, 179, 8, 0.4); }
+        .order-card.status-preparing { border-color: rgba(249, 115, 22, 0.5); }
+        .item-row {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .btn-claim { background: #2563eb; hover: background: #1d4ed8; }
+        .btn-prepare { background: #d97706; hover: background: #b45309; }
+        .btn-ready { background: #16a34a; hover: background: #15803d; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- HEADER -->
+    <header class="kds-header sticky top-0 z-40 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-orange-600/20 text-orange-500 flex items-center justify-center font-bold text-xl border border-orange-500/30">
+                <i class="fas fa-fire"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                    Kitchen Display System
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">KDS LIVE</span>
+                </h1>
+                <p class="text-xs text-zinc-400 font-medium">Branch: The Grand Dine &middot; Staff: <span id="staffNameDisplay" class="text-zinc-200 font-bold">Vikram Singh</span></p>
+            </div>
+        </div>
+
+        <!-- Station Filters -->
+        <div class="flex items-center gap-2 overflow-x-auto py-1" id="stationTabs">
+            <!-- Rendered by JS -->
+        </div>
+
+        <!-- System Controls -->
+        <div class="flex items-center gap-3">
+            <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-sm font-semibold flex items-center gap-2" title="Toggle Chime Sound">
+                <i class="fas fa-volume-up text-orange-400" id="soundIcon"></i>
+                <span class="hidden sm:inline">Chime On</span>
+            </button>
+            <a href="login.html" class="p-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-sm font-semibold flex items-center gap-2" title="Switch Portal">
+                <i class="fas fa-exchange-alt"></i>
+                <span class="hidden sm:inline">Portal Switch</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- METRICS SUMMARY BAR -->
+    <div class="bg-zinc-950 border-b border-zinc-800/80 px-6 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-zinc-400">
+            <div class="flex items-center gap-6">
+                <div>Pending Items: <span id="statPending" class="font-black text-blue-400 text-sm">0</span></div>
+                <div>Claimed: <span id="statClaimed" class="font-black text-amber-400 text-sm">0</span></div>
+                <div>Preparing: <span id="statPreparing" class="font-black text-orange-400 text-sm">0</span></div>
+                <div>Ready Today: <span id="statReady" class="font-black text-emerald-400 text-sm">0</span></div>
+            </div>
+            <div class="text-zinc-500">Auto-synced with Customer App &amp; Server Board</div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT KITCHEN QUEUE -->
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto">
+        <!-- Toast Notification Area -->
+        <div id="kitchenToast" class="hidden mb-6 p-4 rounded-2xl bg-gradient-to-r from-orange-600 to-red-600 text-white flex items-center justify-between shadow-xl animate-bounce">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-bell text-2xl"></i>
+                <div>
+                    <div class="font-bold text-sm" id="toastTitle">New Order Received!</div>
+                    <div class="text-xs opacity-90" id="toastBody">Table 5 placed 3 items.</div>
+                </div>
+            </div>
+            <button onclick="dismissToast()" class="text-xs font-bold bg-black/30 hover:bg-black/50 px-3 py-1.5 rounded-lg">Dismiss</button>
+        </div>
+
+        <!-- Queue Grid -->
+        <div id="kitchenQueueGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards rendered dynamically by JS -->
+        </div>
+
+        <!-- Empty Queue State -->
+        <div id="emptyQueueState" class="hidden text-center py-20">
+            <div class="w-20 h-20 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4 text-zinc-600 text-3xl">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="text-lg font-bold text-zinc-300">Kitchen Queue is Clear!</h3>
+            <p class="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">All orders for this station have been prepared and sent to service staff.</p>
+        </div>
+    </main>
+
+    <script src="scripts/store.js"></script>
+    <script src="scripts/kitchen.js"></script>
+</body>
+</html>
