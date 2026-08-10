@@ -14,24 +14,40 @@
 </head>
 <body>
 
-    <!-- ═══ SIDEBAR ═══ -->
-    <aside class="sidebar">
-        <div class="logo"><i class="fas fa-fire"></i> Flame<span>Dine</span><span class="badge-version">ADMIN</span></div>
-
-        <button class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-        <button class="nav-item" data-page="billing"><i class="fas fa-receipt"></i><span>Billing</span></button>
-        <button class="nav-item" data-page="menu"><i class="fas fa-utensils"></i><span>Menu</span></button>
-        <button class="nav-item" data-page="tables"><i class="fas fa-table"></i><span>Tables</span></button>
-        <button class="nav-item" data-page="staff"><i class="fas fa-users"></i><span>Staff</span></button>
-
-        <div class="divider"></div>
-        <a href="../login.html" class="nav-item" style="text-decoration:none;color:#FF3D00;"><i class="fas fa-exchange-alt"></i><span>Portal Switcher</span></a>
-        <button class="nav-item" data-page="print-settings"><i class="fas fa-print"></i><span>Print Settings</span><span class="badge-version" style="background:#27272a;color:#f59e0b;">Phase 2</span></button>
-        <button class="nav-item logout" data-page="logout" style="color:#f87171;"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
-    </aside>
-
     <!-- ═══ MAIN CONTENT ═══ -->
     <div class="main">
+
+        <!-- ═══ TOP HEADER (title + profile) with hoverable sub-header (page nav) ═══ -->
+        <div class="app-header-wrap" id="appHeaderWrap">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <div class="logo"><i class="fas fa-fire"></i> Flame<span>Dine</span><span class="badge-version">ADMIN</span></div>
+                    <!-- Always-visible affordance hinting the page nav is tucked below -->
+                    <button class="subheader-peek" id="subheaderPeek" onclick="toggleSubheader()" aria-label="Show page navigation">
+                        <span>Menu</span><i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="user-menu" id="userMenu">
+                    <button class="user-avatar-btn" id="userAvatarBtn" onclick="toggleUserMenu()">RK</button>
+                    <div class="user-dropdown hidden" id="userDropdown">
+                        <div class="user-dropdown-info">
+                            <div class="user-dropdown-name" id="userDropdownName">Rajesh Kumar</div>
+                            <div class="user-dropdown-role" id="userDropdownRole">Admin &middot; The Grand Dine</div>
+                        </div>
+                        <div class="user-dropdown-divider"></div>
+                        <button class="user-dropdown-item logout-item" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="subheader" id="subheaderNav">
+                <button class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+                <button class="nav-item" data-page="billing"><i class="fas fa-receipt"></i><span>Billing</span></button>
+                <button class="nav-item" data-page="menu"><i class="fas fa-utensils"></i><span>Menu</span></button>
+                <button class="nav-item" data-page="tables"><i class="fas fa-table"></i><span>Tables</span></button>
+                <button class="nav-item" data-page="staff"><i class="fas fa-users"></i><span>Staff</span></button>
+            </nav>
+        </div>
 
         <!-- ========== DASHBOARD ========== -->
         <section id="page-dashboard" class="page active">
@@ -99,7 +115,6 @@
                         <button class="quick-action-btn" onclick="alert('Managing menu...')"><i class="fas fa-utensils"></i> Manage Menu</button>
                         <button class="quick-action-btn" onclick="alert('Staff management...')"><i class="fas fa-users"></i> Staff<span class="badge">2 on leave</span></button>
                         <button class="quick-action-btn" onclick="alert('Generating report...')"><i class="fas fa-file-alt"></i> Daily Report</button>
-                        <button class="quick-action-btn" onclick="alert('Print settings...')"><i class="fas fa-print"></i> Print Settings<span class="badge warning">Phase 2</span></button>
                         <button class="quick-action-btn" onclick="alert('Billing...')"><i class="fas fa-receipt"></i> Billing<span class="badge danger">4 pending</span></button>
                     </div>
                 </div>
@@ -295,27 +310,6 @@
                         <tr><td><strong>Deepak Gupta</strong></td><td>deepak@softnix.com</td><td><span class="badge badge-green">Server</span></td><td>The Grand Dine</td><td><button class="btn btn-sm btn-danger" onclick="confirmDelete('Role','Deepak Gupta')">Remove</button></td></tr>
                     </tbody>
                 </table>
-            </div>
-        </section>
-
-        <!-- ========== PRINT SETTINGS ========== -->
-        <section id="page-print-settings" class="page">
-            <div class="page-header"><div><h1>Print Settings</h1><div class="sub">Configure kitchen notification mode <span class="badge badge-yellow">Phase 2</span></div></div></div>
-            <div style="background:#fff;border-radius:12px;border:1px solid #e9edf4;padding:32px;text-align:center;max-width:600px;margin:0 auto;">
-                <i class="fas fa-print" style="font-size:56px;color:#94a3b8;margin-bottom:16px;"></i>
-                <h3 style="margin-bottom:8px;">Coming Soon: Paper Printing</h3>
-                <p style="color:#64748b;max-width:400px;margin:0 auto 16px;">In Phase 2, you'll be able to switch between <strong>Digital</strong>, <strong>Paper</strong>, or <strong>Both</strong> modes and configure printers per station.</p>
-                <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
-                    <span class="badge badge-blue">Current Mode: <strong>Digital</strong></span>
-                    <span class="badge badge-gray">0 printers configured</span>
-                </div>
-                <div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;text-align:left;">
-                    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e9edf4;"><span>Station</span><span>Printer</span><span>Status</span></div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;color:#94a3b8;font-style:italic;"><span>Grill</span><span>—</span><span>Not configured</span></div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;color:#94a3b8;font-style:italic;"><span>Beverage</span><span>—</span><span>Not configured</span></div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;color:#94a3b8;font-style:italic;"><span>Desserts</span><span>—</span><span>Not configured</span></div>
-                </div>
-                <button class="btn btn-primary" style="margin-top:20px;" onclick="alert('🚧 Print configuration will be available in Phase 2.')"><i class="fas fa-cog"></i> Configure Printers</button>
             </div>
         </section>
 
