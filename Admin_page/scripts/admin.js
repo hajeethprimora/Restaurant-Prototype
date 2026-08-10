@@ -570,6 +570,7 @@ window.executePaymentCorrection = function (billId) {
 
 // ─── ADMIN MENU & STATIONS ────────────────────────────────────
 let menuViewMode = 'category'; // 'all' | 'category' | 'station'
+let menuLayoutMode = 'list'; // 'list' | 'grid' (defaults to List View for mobile optimization & fast admin control)
 let currentMenuCategory = null;
 let currentMenuStation = null;
 
@@ -620,16 +621,24 @@ function renderMenuTopGrid(container) {
             <div><h1>Menu Management</h1><div class="sub">${subtitle}</div></div>
             <div class="actions">${headerAction}</div>
         </div>
-        <div class="view-toggle">
-            <button class="view-toggle-btn ${menuViewMode === 'all' ? 'active' : ''}" onclick="switchMenuView('all')"><i class="fas fa-border-all"></i> All</button>
-            <button class="view-toggle-btn ${menuViewMode === 'category' ? 'active' : ''}" onclick="switchMenuView('category')"><i class="fas fa-layer-group"></i> By Category</button>
-            <button class="view-toggle-btn ${menuViewMode === 'station' ? 'active' : ''}" onclick="switchMenuView('station')"><i class="fas fa-fire-burner"></i> By Station</button>
+        <div class="view-toggle-wrap">
+            <div class="view-toggle" style="margin-bottom:0;">
+                <button class="view-toggle-btn ${menuViewMode === 'all' ? 'active' : ''}" onclick="switchMenuView('all')"><i class="fas fa-border-all"></i> All Items</button>
+                <button class="view-toggle-btn ${menuViewMode === 'category' ? 'active' : ''}" onclick="switchMenuView('category')"><i class="fas fa-layer-group"></i> By Category</button>
+                <button class="view-toggle-btn ${menuViewMode === 'station' ? 'active' : ''}" onclick="switchMenuView('station')"><i class="fas fa-fire-burner"></i> By Station</button>
+            </div>
+            ${menuViewMode === 'all' ? `
+                <div class="layout-toggle">
+                    <button class="layout-toggle-btn ${menuLayoutMode === 'list' ? 'active' : ''}" onclick="switchMenuLayout('list')" title="Mobile-Optimized List View"><i class="fas fa-list"></i> List</button>
+                    <button class="layout-toggle-btn ${menuLayoutMode === 'grid' ? 'active' : ''}" onclick="switchMenuLayout('grid')" title="Visual Cards Grid View"><i class="fas fa-th-large"></i> Grid</button>
+                </div>
+            ` : ''}
         </div>
     `;
 
     if (menuViewMode === 'category') html += renderCategoryCardsHtml();
     else if (menuViewMode === 'station') html += renderStationCardsHtml();
-    else html += renderMenuItemGridHtml(window.FlameDineStore.getMenuItems(), 'all');
+    else html += renderMenuItemsHtml(window.FlameDineStore.getMenuItems(), 'all');
 
     container.innerHTML = html;
 }
@@ -684,8 +693,54 @@ function renderStationCardsHtml() {
     return html;
 }
 
-// Renders a grid of item cards. `badgeMode` controls which badge(s) appear per card:
-// 'category' -> station badge, 'station' -> category badge, 'all' -> both.
+// Chooses between List View and Grid View based on menuLayoutMode
+function renderMenuItemsHtml(items, badgeMode) {
+    if (menuLayoutMode === 'list') {
+        return renderMenuItemListHtml(items, badgeMode);
+    }
+    return renderMenuItemGridHtml(items, badgeMode);
+}
+
+// Renders a List View for items (Mobile & Admin density friendly)
+function renderMenuItemListHtml(items, badgeMode) {
+    let html = `<div class="menu-item-list">`;
+    if (items.length === 0) {
+        html += `<div style="text-align:center;color:#94a3b8;padding:32px;">No items here yet.</div>`;
+    }
+    items.forEach(i => {
+        const badges = badgeMode === 'all'
+            ? `<span class="badge badge-gray">${i.category}</span><span class="badge badge-blue">${i.station}</span>`
+            : badgeMode === 'category'
+                ? `<span class="badge badge-blue">${i.station}</span>`
+                : `<span class="badge badge-gray">${i.category}</span>`;
+        html += `
+            <div class="menu-item-list-row ${!i.available ? 'is-disabled' : ''}">
+                <div class="item-list-thumb">
+                    <span>${i.emoji}</span>
+                </div>
+                <div class="item-list-details">
+                    <div class="item-list-name-row">
+                        <span class="item-list-name">${i.name}</span>
+                        <span class="item-list-price">₹${i.price}</span>
+                    </div>
+                    <div class="item-list-badges">${badges}</div>
+                </div>
+                <div class="item-list-actions">
+                    <div class="toggle-switch ${i.available ? 'active' : ''}" onclick="window.FlameDineStore.toggleItemAvailability(${i.id});renderAdminMenu();">
+                        <span class="track"><span class="thumb"></span></span>
+                        <span class="label hidden-mobile">${i.available ? 'Active' : 'Inactive'}</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline" onclick="openModal('reassignStation', ${i.id}, '${i.station}')" title="Reassign station"><i class="fas fa-arrows-left-right"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="executeDeleteItem(${i.id})" title="Delete item"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    });
+    html += `</div>`;
+    return html;
+}
+
+// Renders a Grid View of item cards
 function renderMenuItemGridHtml(items, badgeMode) {
     let html = `<div class="menu-item-grid">`;
     if (items.length === 0) {
@@ -737,15 +792,26 @@ function renderMenuGroupDetail(container, group) {
         <div class="billing-history-header">
             <button class="back-btn" onclick="${backFn}()"><i class="fas fa-arrow-left"></i></button>
             <div><h1 style="font-size:24px;">${group.value}</h1><div class="sub">${groupItems.length} item${groupItems.length === 1 ? '' : 's'} ${group.type === 'category' ? 'in this category' : 'routed to this station'}</div></div>
-            <div class="actions" style="margin-left:auto;"><button class="btn btn-primary" onclick="openModal(${addItemArgs})"><i class="fas fa-plus"></i> Add Item</button></div>
+            <div class="actions" style="margin-left:auto; display:flex; gap:10px; align-items:center;">
+                <div class="layout-toggle">
+                    <button class="layout-toggle-btn ${menuLayoutMode === 'list' ? 'active' : ''}" onclick="switchMenuLayout('list')" title="List View"><i class="fas fa-list"></i> List</button>
+                    <button class="layout-toggle-btn ${menuLayoutMode === 'grid' ? 'active' : ''}" onclick="switchMenuLayout('grid')" title="Grid View"><i class="fas fa-th-large"></i> Grid</button>
+                </div>
+                <button class="btn btn-primary" onclick="openModal(${addItemArgs})"><i class="fas fa-plus"></i> Add Item</button>
+            </div>
         </div>
     `;
-    html += renderMenuItemGridHtml(groupItems, group.type);
+    html += renderMenuItemsHtml(groupItems, group.type);
     container.innerHTML = html;
 }
 
 window.switchMenuView = function (mode) {
     menuViewMode = mode;
+    renderAdminMenu();
+};
+
+window.switchMenuLayout = function (layout) {
+    menuLayoutMode = layout;
     renderAdminMenu();
 };
 
