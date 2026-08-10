@@ -449,14 +449,14 @@ function renderBillingHistory(tableNumber) {
 
         const itemRows = items.map(i => `
             <tr>
-                <td>
+                <td data-label="Item">
                     <strong>${i.name}</strong>
                     ${i.note ? `<div style="font-size:11px;color:#94a3b8;">${i.note}</div>` : ''}
                 </td>
-                <td style="text-align:center;">${i.qty}</td>
-                <td style="text-align:right;">₹${i.price}</td>
-                <td style="text-align:right;"><strong>₹${i.price * i.qty}</strong></td>
-                <td style="text-align:center;"><span class="badge ${itemStatusBadgeClass(i.status)}">${i.status.replace('_', ' ')}</span></td>
+                <td data-label="Qty" style="text-align:center;">${i.qty}</td>
+                <td data-label="Price" style="text-align:right;">₹${i.price}</td>
+                <td data-label="Amount" style="text-align:right;"><strong>₹${i.price * i.qty}</strong></td>
+                <td data-label="Status" style="text-align:center;"><span class="badge ${itemStatusBadgeClass(i.status)}">${i.status.replace('_', ' ')}</span></td>
             </tr>
         `).join('');
 
@@ -495,12 +495,12 @@ function renderBillingHistory(tableNumber) {
             const isVoid = b.status === 'VOIDED';
             html += `
                 <tr style="${isVoid ? 'opacity:0.5;text-decoration:line-through;' : ''}">
-                    <td><strong>${b.billCode}</strong></td>
-                    <td>${new Date(b.settledAt).toLocaleDateString()}</td>
-                    <td><span class="badge badge-blue">${b.paymentMethod}</span></td>
-                    <td><strong>₹${b.finalTotal}</strong></td>
-                    <td><span class="badge ${isVoid ? 'badge-red' : 'badge-green'}">${b.status}</span></td>
-                    <td>
+                    <td data-label="Bill Code"><strong>${b.billCode}</strong></td>
+                    <td data-label="Date">${new Date(b.settledAt).toLocaleDateString()}</td>
+                    <td data-label="Method"><span class="badge badge-blue">${b.paymentMethod}</span></td>
+                    <td data-label="Total"><strong>₹${b.finalTotal}</strong></td>
+                    <td data-label="Status"><span class="badge ${isVoid ? 'badge-red' : 'badge-green'}">${b.status}</span></td>
+                    <td data-label="Action">
                         ${!isVoid && b.paymentMethod !== 'UNPAID' ? `<button class="btn btn-xs btn-outline" onclick="openModal('correctPaymentModal', '${b.id}')">Correct Payment</button>` : '—'}
                     </td>
                 </tr>
@@ -941,10 +941,10 @@ function renderAdminStaff() {
     staff.forEach(s => {
         html += `
             <tr>
-                <td><strong>${s.name}</strong></td>
-                <td>${s.email}</td>
-                <td><span class="badge ${s.role === 'ADMIN' ? 'badge-purple' : s.role === 'SERVER' ? 'badge-green' : 'badge-blue'}">${s.role}</span></td>
-                <td>${s.branch}</td>
+                <td data-label="Name"><strong>${s.name}</strong></td>
+                <td data-label="Email">${s.email}</td>
+                <td data-label="Role"><span class="badge ${s.role === 'ADMIN' ? 'badge-purple' : s.role === 'SERVER' ? 'badge-green' : 'badge-blue'}">${s.role}</span></td>
+                <td data-label="Branch">${s.branch}</td>
             </tr>
         `;
     });
