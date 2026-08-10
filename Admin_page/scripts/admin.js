@@ -12,7 +12,6 @@ const pages = {
     menu: document.getElementById('page-menu'),
     tables: document.getElementById('page-tables'),
     staff: document.getElementById('page-staff'),
-    'print-settings': document.getElementById('page-print-settings'),
 };
 
 function navigateTo(pageId) {
@@ -27,18 +26,69 @@ function navigateTo(pageId) {
 }
 
 navItems.forEach(item => {
-    item.addEventListener('click', () => {
-        const page = item.dataset.page;
-        if (page === 'logout') {
-            if (confirm('Logout from admin panel?')) {
-                window.location.href = '../login.html';
-            }
-            return;
-        }
-        navigateTo(page);
-    });
+    item.addEventListener('click', () => navigateTo(item.dataset.page));
 });
 window.navigateTo = navigateTo;
+
+// ─── USER MENU (top-right avatar & logout) ─────────────────────
+function initUserMenu() {
+    const staff = window.FlameDineStore.getStaffUsers();
+    const admin = staff.find(s => s.role === 'ADMIN') || staff[0];
+    if (!admin) return;
+    const initials = admin.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const roleLabel = admin.role.charAt(0) + admin.role.slice(1).toLowerCase();
+
+    const avatarBtn = document.getElementById('userAvatarBtn');
+    const nameEl = document.getElementById('userDropdownName');
+    const roleEl = document.getElementById('userDropdownRole');
+    if (avatarBtn) avatarBtn.textContent = initials;
+    if (nameEl) nameEl.textContent = admin.name;
+    if (roleEl) roleEl.textContent = `${roleLabel} · ${admin.branch}`;
+}
+
+function toggleUserMenu() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) dropdown.classList.toggle('hidden');
+}
+window.toggleUserMenu = toggleUserMenu;
+
+function handleLogout() {
+    if (confirm('Logout from admin panel?')) {
+        window.location.href = '../login.html';
+    }
+}
+window.handleLogout = handleLogout;
+
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('userMenu');
+    const dropdown = document.getElementById('userDropdown');
+    if (menu && dropdown && !menu.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+// ─── SUB-HEADER NAV (hover to reveal; tap-to-toggle on touch devices) ──
+function toggleSubheader() {
+    const wrap = document.getElementById('appHeaderWrap');
+    if (wrap) wrap.classList.toggle('expanded');
+}
+window.toggleSubheader = toggleSubheader;
+
+document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('appHeaderWrap');
+    if (wrap && wrap.classList.contains('expanded') && !wrap.contains(e.target)) {
+        wrap.classList.remove('expanded');
+    }
+});
+
+// One-time teaser: briefly auto-open the sub-header on first load so users
+// discover it exists, instead of relying on them to stumble onto the hover.
+function teaseSubheaderReveal() {
+    const wrap = document.getElementById('appHeaderWrap');
+    if (!wrap) return;
+    setTimeout(() => wrap.classList.add('expanded'), 500);
+    setTimeout(() => wrap.classList.remove('expanded'), 2200);
+}
 
 // ─── MODAL SYSTEM ────────────────────────────────────────────
 const modalOverlay = document.getElementById('modalOverlay');
@@ -644,6 +694,8 @@ window.executeAssignRole = function () {
 
 // ─── INIT & STORE SUBSCRIPTION ──────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    initUserMenu();
+    teaseSubheaderReveal();
     window.FlameDineStore.subscribe(event => {
         renderBillingFloor();
     });
