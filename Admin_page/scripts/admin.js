@@ -20,7 +20,7 @@ function navigateTo(pageId) {
     navItems.forEach(item => { item.classList.toggle('active', item.dataset.page === pageId); });
     closeModal();
     if (pageId === 'billing') renderBillingFloor();
-    if (pageId === 'menu') renderAdminMenu();
+    if (pageId === 'menu') { currentMenuCategory = null; currentMenuStation = null; renderAdminMenu(); }
     if (pageId === 'tables') renderAdminTables();
     if (pageId === 'staff') renderAdminStaff();
 }
@@ -169,15 +169,32 @@ const MODAL_TEMPLATES = {
     addCategory: () => `
         <div class="modal-header"><h3>Add Category</h3><button class="close" onclick="closeModal()">&times;</button></div>
         <div class="form-group"><label>Category Name</label><input type="text" id="catNameInput" placeholder="e.g. Snacks" /></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();alert('✅ Category saved.')">Save</button></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeSaveCategory()">Save</button></div>
     `,
 
-    addItem: (category) => `
+    addStation: () => `
+        <div class="modal-header"><h3>Add Kitchen Station</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="form-group"><label>Station Name</label><input type="text" id="stationNameInput" placeholder="e.g. Tandoor" /></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeSaveStation()">Save</button></div>
+    `,
+
+    addItem: (category, station) => `
         <div class="modal-header"><h3>Add Menu Item</h3><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="form-group">
+            <label>Item Image</label>
+            <div class="image-upload-box" id="itemImageBox" onclick="document.getElementById('itemImageInput').click()">
+                <img id="itemImagePreview" style="display:none;" />
+                <div id="itemImagePlaceholder">
+                    <i class="fas fa-camera"></i>
+                    <span>Click to upload photo</span>
+                </div>
+            </div>
+            <input type="file" id="itemImageInput" accept="image/*" style="display:none;" onchange="previewItemImage(event)" />
+        </div>
         <div class="form-group"><label>Item Name</label><input type="text" id="itemNameInput" placeholder="e.g. Pasta Alfredo" /></div>
         <div class="form-group"><label>Price (₹)</label><input type="number" id="itemPriceInput" placeholder="199" /></div>
         <div class="form-group"><label>Category</label>${renderComboField('categoryCombo', 'category', category)}</div>
-        <div class="form-group"><label>Kitchen Station</label>${renderComboField('stationCombo', 'station', '')}</div>
+        <div class="form-group"><label>Kitchen Station</label>${renderComboField('stationCombo', 'station', station || '')}</div>
         <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="executeSaveItem()">Save Item</button></div>
     `,
 
@@ -394,6 +411,7 @@ function renderBillingFloor() {
                     <span class="chair chair-left"></span>
                     <span class="chair chair-right"></span>
                     <div class="table-number">${t.number}</div>
+                    ${hasSession ? `<div class="table-summary"><span>${sessionItems.length} item${sessionItems.length === 1 ? '' : 's'}</span><span>₹${total}</span></div>` : ''}
                     ${hasSession ? '<div class="table-status-dot"></div>' : ''}
                 </div>
                 ${popover}
@@ -409,6 +427,14 @@ function statusBadgeClass(status) {
     return 'badge-gray';
 }
 
+function itemStatusBadgeClass(status) {
+    if (status === 'placed') return 'badge-gray';
+    if (status === 'claimed' || status === 'preparing') return 'badge-blue';
+    if (status === 'ready' || status === 'picked_up') return 'badge-yellow';
+    if (status === 'served') return 'badge-green';
+    return 'badge-gray';
+}
+
 function renderBillingHistory(tableNumber) {
     tableNumber = parseInt(tableNumber);
     const session = window.FlameDineStore.getOpenSessionForTable(tableNumber);
@@ -418,17 +444,38 @@ function renderBillingHistory(tableNumber) {
 
     let html = '';
     if (session) {
-        const items = window.FlameDineStore.getOrderItemsForSession(session.id);
+        const items = window.FlameDineStore.getOrderItemsForSession(session.id).filter(i => i.status !== 'cancelled');
         const total = items.reduce((s, i) => s + (i.price * i.qty), 0);
-        const unfulfilled = items.filter(i => !['served', 'cancelled'].includes(i.status)).length;
+
+        const itemRows = items.map(i => `
+            <tr>
+                <td>
+                    <strong>${i.name}</strong>
+                    ${i.note ? `<div style="font-size:11px;color:#94a3b8;">${i.note}</div>` : ''}
+                </td>
+                <td style="text-align:center;">${i.qty}</td>
+                <td style="text-align:right;">₹${i.price}</td>
+                <td style="text-align:right;"><strong>₹${i.price * i.qty}</strong></td>
+                <td style="text-align:center;"><span class="badge ${itemStatusBadgeClass(i.status)}">${i.status.replace('_', ' ')}</span></td>
+            </tr>
+        `).join('');
 
         html += `
             <div class="card" style="margin-bottom:20px;">
                 <div class="card-title"><span><i class="fas fa-receipt" style="color:#E53935;margin-right:6px;"></i> Current Open Session</span></div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:10px;color:#64748b;font-size:13px;">
+                    <span>Session ID</span><strong>${session.id.substring(0, 14)}</strong>
+                </div>
+                ${items.length ? `
+                <div class="table-wrap" style="margin-bottom:10px;">
+                    <table>
+                        <thead><tr><th>Item</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Price</th><th style="text-align:right;">Amount</th><th style="text-align:center;">Status</th></tr></thead>
+                        <tbody>${itemRows}</tbody>
+                    </table>
+                </div>
+                ` : `<div class="alert-info" style="margin-bottom:10px;"><i class="fas fa-info-circle"></i><span>No items ordered yet.</span></div>`}
                 <div style="background:#f8fafc;padding:16px;border-radius:8px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Session ID</span><strong>${session.id.substring(0, 14)}</strong></div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Active Items</span><strong>${items.length} item(s) (${unfulfilled} unfulfilled)</strong></div>
-                    <div style="display:flex;justify-content:space-between;border-top:1px solid #d1d9e6;padding-top:8px;font-weight:700;"><span>Subtotal</span><span>₹${total}</span></div>
+                    <div style="display:flex;justify-content:space-between;font-weight:700;"><span>Total Amount</span><span>₹${total}</span></div>
                 </div>
                 <button class="btn btn-success" style="margin-top:14px;width:100%;justify-content:center;" onclick="openModal('settleBillModal', ${tableNumber})">
                     <i class="fas fa-check-circle"></i> Settle Bill &amp; Close Session
@@ -522,55 +569,234 @@ window.executePaymentCorrection = function (billId) {
 };
 
 // ─── ADMIN MENU & STATIONS ────────────────────────────────────
+let menuViewMode = 'category'; // 'all' | 'category' | 'station'
+let currentMenuCategory = null;
+let currentMenuStation = null;
+
+const CATEGORY_ICON_RULES = [
+    { keywords: ['starter', 'appetizer', 'snack'], icon: 'fa-bowl-food' },
+    { keywords: ['main', 'course', 'entree'], icon: 'fa-drumstick-bite' },
+    { keywords: ['beverage', 'drink', 'juice', 'shake'], icon: 'fa-mug-saucer' },
+    { keywords: ['dessert', 'sweet', 'ice cream'], icon: 'fa-ice-cream' },
+    { keywords: ['soup'], icon: 'fa-bowl-rice' },
+    { keywords: ['salad'], icon: 'fa-leaf' },
+    { keywords: ['bread', 'bakery'], icon: 'fa-bread-slice' },
+    { keywords: ['seafood', 'fish'], icon: 'fa-fish' },
+    { keywords: ['pizza'], icon: 'fa-pizza-slice' },
+    { keywords: ['pasta', 'noodle'], icon: 'fa-bowl-food' },
+    { keywords: ['grill', 'bbq', 'barbecue', 'tandoor'], icon: 'fa-fire' },
+];
+function categoryIcon(cat) {
+    const lower = cat.toLowerCase();
+    const match = CATEGORY_ICON_RULES.find(r => r.keywords.some(k => lower.includes(k)));
+    return match ? match.icon : 'fa-utensils';
+}
+
 function renderAdminMenu() {
-    const items = window.FlameDineStore.getMenuItems();
-    const categories = window.FlameDineStore.getCategories();
     const container = document.getElementById('page-menu');
     if (!container) return;
 
+    if (currentMenuCategory) {
+        renderMenuGroupDetail(container, { type: 'category', value: currentMenuCategory });
+    } else if (currentMenuStation) {
+        renderMenuGroupDetail(container, { type: 'station', value: currentMenuStation });
+    } else {
+        renderMenuTopGrid(container);
+    }
+}
+
+function renderMenuTopGrid(container) {
+    const subtitle = menuViewMode === 'category' ? 'Select a category to view and manage its items'
+        : menuViewMode === 'station' ? 'Select a station to view and manage its items'
+        : 'Every item across all categories and stations';
+
+    let headerAction = '';
+    if (menuViewMode === 'category') headerAction = `<button class="btn btn-primary" onclick="openModal('addCategory')"><i class="fas fa-plus"></i> Add Category</button>`;
+    else if (menuViewMode === 'station') headerAction = `<button class="btn btn-primary" onclick="openModal('addStation')"><i class="fas fa-plus"></i> Add Station</button>`;
+    else headerAction = `<button class="btn btn-primary" onclick="openModal('addItem')"><i class="fas fa-plus"></i> Add Item</button>`;
+
     let html = `
         <div class="page-header">
-            <div><h1>Menu Management</h1><div class="sub">Categories, items, pricing, station routing &amp; availability</div></div>
-            <div class="actions"><button class="btn btn-primary" onclick="openModal('addItem')"><i class="fas fa-plus"></i> Add Item</button></div>
+            <div><h1>Menu Management</h1><div class="sub">${subtitle}</div></div>
+            <div class="actions">${headerAction}</div>
+        </div>
+        <div class="view-toggle">
+            <button class="view-toggle-btn ${menuViewMode === 'all' ? 'active' : ''}" onclick="switchMenuView('all')"><i class="fas fa-border-all"></i> All</button>
+            <button class="view-toggle-btn ${menuViewMode === 'category' ? 'active' : ''}" onclick="switchMenuView('category')"><i class="fas fa-layer-group"></i> By Category</button>
+            <button class="view-toggle-btn ${menuViewMode === 'station' ? 'active' : ''}" onclick="switchMenuView('station')"><i class="fas fa-fire-burner"></i> By Station</button>
         </div>
     `;
 
-    categories.forEach(cat => {
-        const catItems = items.filter(i => i.category === cat);
-        html += `
-            <div class="menu-group">
-                <div class="group-header">
-                    <h3>${cat} <span class="count">(${catItems.length} items)</span></h3>
-                    <div style="display:flex;gap:6px;">
-                        <button class="btn btn-sm btn-primary" onclick="openModal('addItem','${cat}')"><i class="fas fa-plus"></i> Add Item</button>
-                    </div>
-                </div>
-        `;
-        catItems.forEach(i => {
-            html += `
-                <div class="menu-item-row" style="border-left:${i.available ? '3px solid #22c55e' : '3px solid #ef4444'};">
-                    <div class="item-info">
-                        <span style="font-size:18px;">${i.emoji}</span>
-                        <span class="name">${i.name}</span>
-                        <span class="badge badge-blue">${i.station}</span>
-                        <span class="price">₹${i.price}</span>
-                    </div>
-                    <div class="item-actions">
-                        <div class="toggle-switch ${i.available ? 'active' : ''}" onclick="window.FlameDineStore.toggleItemAvailability(${i.id});renderAdminMenu();">
-                            <span class="track"><span class="thumb"></span></span>
-                            <span class="label">${i.available ? 'Active' : 'Inactive'}</span>
-                        </div>
-                        <button class="btn btn-sm btn-outline" onclick="openModal('reassignStation', ${i.id}, '${i.station}')"><i class="fas fa-arrows-left-right"></i> Station</button>
-                        <button class="btn btn-sm btn-danger" onclick="executeDeleteItem(${i.id})"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `;
-        });
-        html += `</div>`;
-    });
+    if (menuViewMode === 'category') html += renderCategoryCardsHtml();
+    else if (menuViewMode === 'station') html += renderStationCardsHtml();
+    else html += renderMenuItemGridHtml(window.FlameDineStore.getMenuItems(), 'all');
 
     container.innerHTML = html;
 }
+
+function renderCategoryCardsHtml() {
+    const items = window.FlameDineStore.getMenuItems();
+    const categories = window.FlameDineStore.getCategories();
+
+    let html = `<div class="grid-cards">`;
+    categories.forEach(cat => {
+        const catItems = items.filter(i => i.category === cat);
+        const activeCount = catItems.filter(i => i.available).length;
+        html += `
+            <div class="card-item menu-category-card" onclick="openMenuCategory('${cat.replace(/'/g, "\\'")}')">
+                <div class="card-header">
+                    <h4><i class="fas ${categoryIcon(cat)}" style="font-size:19px;color:#E53935;width:22px;"></i> ${cat}</h4>
+                    <i class="fas fa-chevron-right" style="color:#cbd5e1;"></i>
+                </div>
+                <div class="card-body">${catItems.length} item${catItems.length === 1 ? '' : 's'} &middot; ${activeCount} active</div>
+            </div>
+        `;
+    });
+    html += `
+            <div class="card-empty" onclick="openModal('addCategory')"><i class="fas fa-plus-circle"></i><span>Add New Category</span></div>
+        </div>
+    `;
+    return html;
+}
+
+function renderStationCardsHtml() {
+    const items = window.FlameDineStore.getMenuItems();
+    const stations = window.FlameDineStore.getStations();
+
+    let html = `<div class="grid-cards">`;
+    stations.forEach(st => {
+        const stItems = items.filter(i => i.station === st.name);
+        const activeCount = stItems.filter(i => i.available).length;
+        html += `
+            <div class="card-item menu-category-card" onclick="openMenuStation('${st.name.replace(/'/g, "\\'")}')">
+                <div class="card-header">
+                    <h4><i class="fas ${st.icon}" style="font-size:19px;color:#E53935;width:22px;"></i> ${st.name}</h4>
+                    <i class="fas fa-chevron-right" style="color:#cbd5e1;"></i>
+                </div>
+                <div class="card-body">${stItems.length} item${stItems.length === 1 ? '' : 's'} &middot; ${activeCount} active</div>
+            </div>
+        `;
+    });
+    html += `
+            <div class="card-empty" onclick="openModal('addStation')"><i class="fas fa-plus-circle"></i><span>Add New Station</span></div>
+        </div>
+    `;
+    return html;
+}
+
+// Renders a grid of item cards. `badgeMode` controls which badge(s) appear per card:
+// 'category' -> station badge, 'station' -> category badge, 'all' -> both.
+function renderMenuItemGridHtml(items, badgeMode) {
+    let html = `<div class="menu-item-grid">`;
+    if (items.length === 0) {
+        html += `<div style="text-align:center;color:#94a3b8;padding:32px;">No items here yet.</div>`;
+    }
+    items.forEach(i => {
+        const imgUrl = getDishFallbackImage(i.name);
+        const badges = badgeMode === 'all'
+            ? `<span class="badge badge-gray">${i.category}</span><span class="badge badge-blue">${i.station}</span>`
+            : badgeMode === 'category'
+                ? `<span class="badge badge-blue">${i.station}</span>`
+                : `<span class="badge badge-gray">${i.category}</span>`;
+        html += `
+            <div class="menu-item-card">
+                <div class="menu-item-card-img">
+                    <img src="${imgUrl}" alt="${i.name}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <span class="item-thumb-fallback">${i.emoji}</span>
+                    <span class="menu-item-card-status ${i.available ? 'is-active' : 'is-inactive'}">${i.available ? 'Active' : 'Inactive'}</span>
+                </div>
+                <div class="menu-item-card-info">
+                    <div class="menu-item-card-name">${i.name}</div>
+                    <div class="menu-item-card-meta"><span class="menu-item-card-badges">${badges}</span><span class="price">₹${i.price}</span></div>
+                </div>
+                <div class="menu-item-card-actions">
+                    <div class="toggle-switch ${i.available ? 'active' : ''}" onclick="window.FlameDineStore.toggleItemAvailability(${i.id});renderAdminMenu();">
+                        <span class="track"><span class="thumb"></span></span>
+                    </div>
+                    <button class="btn btn-sm btn-outline" onclick="openModal('reassignStation', ${i.id}, '${i.station}')" title="Reassign station"><i class="fas fa-arrows-left-right"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="executeDeleteItem(${i.id})" title="Delete item"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    });
+    html += `</div>`;
+    return html;
+}
+
+function renderMenuGroupDetail(container, group) {
+    const items = window.FlameDineStore.getMenuItems();
+    const groupItems = group.type === 'category'
+        ? items.filter(i => i.category === group.value)
+        : items.filter(i => i.station === group.value);
+
+    const backFn = group.type === 'category' ? 'backToMenuCategories' : 'backToMenuStations';
+    const escapedValue = group.value.replace(/'/g, "\\'");
+    const addItemArgs = group.type === 'category' ? `'addItem','${escapedValue}'` : `'addItem','','${escapedValue}'`;
+
+    let html = `
+        <div class="billing-history-header">
+            <button class="back-btn" onclick="${backFn}()"><i class="fas fa-arrow-left"></i></button>
+            <div><h1 style="font-size:24px;">${group.value}</h1><div class="sub">${groupItems.length} item${groupItems.length === 1 ? '' : 's'} ${group.type === 'category' ? 'in this category' : 'routed to this station'}</div></div>
+            <div class="actions" style="margin-left:auto;"><button class="btn btn-primary" onclick="openModal(${addItemArgs})"><i class="fas fa-plus"></i> Add Item</button></div>
+        </div>
+    `;
+    html += renderMenuItemGridHtml(groupItems, group.type);
+    container.innerHTML = html;
+}
+
+window.switchMenuView = function (mode) {
+    menuViewMode = mode;
+    renderAdminMenu();
+};
+
+window.openMenuCategory = function (cat) {
+    currentMenuCategory = cat;
+    renderAdminMenu();
+};
+
+window.backToMenuCategories = function () {
+    currentMenuCategory = null;
+    renderAdminMenu();
+};
+
+window.openMenuStation = function (station) {
+    currentMenuStation = station;
+    renderAdminMenu();
+};
+
+window.backToMenuStations = function () {
+    currentMenuStation = null;
+    renderAdminMenu();
+};
+
+window.executeSaveCategory = function () {
+    const name = document.getElementById('catNameInput')?.value?.trim();
+    if (!name) { alert('Please enter a category name'); return; }
+    window.FlameDineStore.addCategory(name);
+    closeModal();
+    renderAdminMenu();
+};
+
+window.executeSaveStation = function () {
+    const name = document.getElementById('stationNameInput')?.value?.trim();
+    if (!name) { alert('Please enter a station name'); return; }
+    window.FlameDineStore.saveStation(name);
+    closeModal();
+    renderAdminMenu();
+};
+
+window.previewItemImage = function (event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const preview = document.getElementById('itemImagePreview');
+    const placeholder = document.getElementById('itemImagePlaceholder');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
+        if (placeholder) placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+};
 
 window.executeSaveItem = function () {
     const name = document.getElementById('itemNameInput')?.value;
