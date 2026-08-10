@@ -22,20 +22,19 @@
             <div class="topbar">
                 <div class="topbar-left">
                     <div class="logo"><i class="fas fa-fire"></i> Flame<span>Dine</span><span class="badge-version">ADMIN</span></div>
-                    <!-- Always-visible affordance hinting the page nav is tucked below -->
-                    <button class="subheader-peek" id="subheaderPeek" onclick="toggleSubheader()" aria-label="Show page navigation">
-                        <span>Menu</span><i class="fas fa-chevron-down"></i>
-                    </button>
                 </div>
-                <div class="user-menu" id="userMenu">
-                    <button class="user-avatar-btn" id="userAvatarBtn" onclick="toggleUserMenu()">RK</button>
-                    <div class="user-dropdown hidden" id="userDropdown">
-                        <div class="user-dropdown-info">
-                            <div class="user-dropdown-name" id="userDropdownName">Rajesh Kumar</div>
-                            <div class="user-dropdown-role" id="userDropdownRole">Admin &middot; The Grand Dine</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <a href="../login.html" class="btn btn-outline btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:600;color:#64748b;" title="Switch Role / Portal"><i class="fas fa-exchange-alt"></i> Switch Role</a>
+                    <div class="user-menu" id="userMenu">
+                        <button class="user-avatar-btn" id="userAvatarBtn" onclick="toggleUserMenu()">RK</button>
+                        <div class="user-dropdown hidden" id="userDropdown">
+                            <div class="user-dropdown-info">
+                                <div class="user-dropdown-name" id="userDropdownName">Rajesh Kumar</div>
+                                <div class="user-dropdown-role" id="userDropdownRole">Admin &middot; The Grand Dine</div>
+                            </div>
+                            <div class="user-dropdown-divider"></div>
+                            <button class="user-dropdown-item logout-item" onclick="handleLogout()"><i class="fas fa-exchange-alt"></i> Switch Role / Logout</button>
                         </div>
-                        <div class="user-dropdown-divider"></div>
-                        <button class="user-dropdown-item logout-item" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </div>
                 </div>
             </div>

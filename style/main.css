@@ -210,19 +210,22 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: nowrap;
+            gap: 8px;
         }
         .app-header .location {
             color: #fff;
             display: flex;
             align-items: center;
             gap: 8px;
-            flex: 1;
+            flex-shrink: 0;
         }
         .app-header .location .restaurant-name {
             font-weight: 800;
             font-size: 18px;
             color: #fff;
             letter-spacing: -0.5px;
+            white-space: nowrap;
         }
         .app-header .location .table-badge {
             background: rgba(255, 68, 0, 0.15);
@@ -232,6 +235,11 @@
             font-size: 11px;
             font-weight: 700;
             border: 1px solid rgba(255, 68, 0, 0.3);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .header-actions {
+            flex-shrink: 0;
         }
         .header-tracker-btn {
             background: #222;
@@ -246,58 +254,18 @@
             border: 1.5px solid #333;
             transition: all 0.3s ease;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            white-space: nowrap;
         }
         .header-tracker-btn:hover {
             transform: scale(1.03);
             background: #2a2a2a;
         }
-        
-        /* Blazing Fire Animation */
-        @keyframes blazing-fire {
-            0% {
-                box-shadow: 0 0 5px #ff3300, 0 0 2px #ffaa00, inset 0 0 2px #ff3300;
-                border-color: #ff5500;
-                color: #ffaa00;
-            }
-            50% {
-                box-shadow: 0 0 15px #ff0055, 0 0 6px #ffaa00, inset 0 0 8px #ff3300;
-                border-color: #ff003c;
-                color: #fff;
-            }
-            100% {
-                box-shadow: 0 0 5px #ff3300, 0 0 2px #ffaa00, inset 0 0 2px #ff3300;
-                border-color: #ff5500;
-                color: #ffaa00;
+        @media (max-width: 419px) {
+            .app-header .location .restaurant-name {
+                font-size: 16px;
             }
         }
-        .border-blazing-fire {
-            animation: blazing-fire 1.2s infinite alternate ease-in-out;
-            background: #111;
-            font-weight: 800;
-        }
-        
-        /* Glowing Green Animation for Order Ready */
-        @keyframes glowing-green {
-            0% {
-                box-shadow: 0 0 5px #4caf50, inset 0 0 2px #4caf50;
-                border-color: #4caf50;
-                color: #81c784;
-            }
-            50% {
-                box-shadow: 0 0 12px #81c784, inset 0 0 6px #4caf50;
-                border-color: #66bb6a;
-                color: #fff;
-            }
-            100% {
-                box-shadow: 0 0 5px #4caf50, inset 0 0 2px #4caf50;
-                border-color: #4caf50;
-                color: #81c784;
-            }
-        }
-        .border-glowing-green {
-            animation: glowing-green 1.5s infinite alternate ease-in-out;
-            background: #111;
-        }
+
         .search-bar {
             margin-top: 10px;
             background: #2a2a2a;
@@ -430,6 +398,10 @@
             flex: 1;
             transition: all 0.3s ease;
         }
+        .preparing-toast .ready-section {
+            gap: 8px;
+            padding-left: 2px;
+        }
         
         .preparing-toast .toast-divider {
             width: 1px;
@@ -476,7 +448,7 @@
         .preparing-toast .avatar-list {
             display: flex;
             align-items: center;
-            margin-left: 8px;
+            margin-left: 4px;
         }
         .preparing-toast .avatar-list .avatar {
             width: 32px;
@@ -544,16 +516,6 @@
                 transform: scale(1) rotate(0deg);
                 box-shadow: 0 0 0 rgba(76, 175, 80, 0);
             }
-        }
-        .preparing-toast .ready-text {
-            color: #fff;
-            font-weight: 700;
-            font-size: 14px;
-            white-space: nowrap;
-        }
-        .preparing-toast .ready-text .highlight {
-            color: #4caf50;
-            font-weight: 800;
         }
         .preparing-toast .ready-subtext {
             color: #888;
@@ -1170,6 +1132,60 @@
         }
 
         /* ============================================================ */
+        /* PER-DISH STATUS BADGE (Order Summary) */
+        /* ============================================================ */
+        .item-status-badge {
+            display: inline-block;
+            margin-top: 3px;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .item-status-badge.status-placed {
+            background: rgba(0, 188, 212, 0.12);
+            color: #4dd0e1;
+        }
+        .item-status-badge.status-claimed {
+            background: rgba(255, 179, 0, 0.12);
+            color: #ffb300;
+        }
+        .item-status-badge.status-preparing {
+            background: rgba(255, 85, 0, 0.12);
+            color: #ff8a50;
+        }
+        .item-status-badge.status-ready {
+            background: rgba(76, 175, 80, 0.12);
+            color: #66bb6a;
+        }
+        .item-status-badge.status-served {
+            background: rgba(255, 255, 255, 0.08);
+            color: #999;
+        }
+        body.light-theme .item-status-badge.status-placed {
+            background: rgba(0, 188, 212, 0.12) !important;
+            color: #00838f !important;
+        }
+        body.light-theme .item-status-badge.status-claimed {
+            background: rgba(255, 179, 0, 0.15) !important;
+            color: #a06800 !important;
+        }
+        body.light-theme .item-status-badge.status-preparing {
+            background: rgba(255, 85, 0, 0.12) !important;
+            color: #d3450b !important;
+        }
+        body.light-theme .item-status-badge.status-ready {
+            background: rgba(76, 175, 80, 0.14) !important;
+            color: #2e7d32 !important;
+        }
+        body.light-theme .item-status-badge.status-served {
+            background: #f0edeb !important;
+            color: #888 !important;
+        }
+
+        /* ============================================================ */
         /* SUCCESS PAGE */
         /* ============================================================ */
         #page-success {
@@ -1539,6 +1555,66 @@
             .cart-content {
                 padding: 20px 24px 100px;
             }
+
+            /* Tablet/desktop: keep the app from stretching edge-to-edge on
+               wide viewports -- center the working column instead of letting
+               a mobile-first layout smear across the full window width. */
+            .home-layout {
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+            .app-header .top-row,
+            .app-header .search-bar {
+                max-width: 1100px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .cart-header .back-row,
+            .tracker-header .back-row {
+                max-width: 1100px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .cart-bar {
+                left: 50%;
+                right: auto;
+                width: calc(100% - 32px);
+                max-width: 640px;
+                transform: translateX(-50%);
+                animation: slideUpBarCentered 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+            }
+            .preparing-toast {
+                max-width: 1100px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .item-sheet {
+                left: 50%;
+                right: auto;
+                width: 100%;
+                max-width: 560px;
+                border-radius: 28px;
+                transform: translate(-50%, 110%);
+            }
+            .item-sheet.open {
+                transform: translate(-50%, 0);
+            }
+        }
+        @keyframes slideUpBarCentered {
+            0% {
+                transform: translateX(-50%) translateY(30px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            #menuGrid {
+                gap: 16px;
+            }
         }
 
         /* ============================================================ */
@@ -1785,31 +1861,6 @@
             padding: 4px 2px;
         }
 
-        /* ============================================================ */
-        /* THEME TOGGLE BUTTON Styles */
-        /* ============================================================ */
-        .theme-toggle-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: #1c1c1e;
-            color: #ffb300;
-            border: 1px solid rgba(255,255,255,0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-        .theme-toggle-btn:hover {
-            background: #2a2a2c;
-            transform: scale(1.05);
-        }
-        .theme-toggle-btn:active {
-            transform: scale(0.95);
-        }
 
         /* ============================================================ */
         /* LIGHT THEME OVERRIDES */
@@ -1847,6 +1898,7 @@
             background-color: #fff !important;
             border-bottom: 1px solid #f0edeb !important;
         }
+        body.light-theme .app-header .location,
         body.light-theme .app-header .restaurant-name,
         body.light-theme .cart-header .back-row,
         body.light-theme .tracker-header .back-row {
@@ -1901,9 +1953,6 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.05) !important;
         }
         body.light-theme .preparing-toast .orders-text {
-            color: #1A1A1A !important;
-        }
-        body.light-theme .preparing-toast .ready-text {
             color: #1A1A1A !important;
         }
         body.light-theme .preparing-toast .toast-divider {
@@ -2034,13 +2083,4 @@
         }
         body.light-theme #itemSheetMinus:hover {
             background-color: #e8e5e2 !important;
-        }
-        
-        body.light-theme .theme-toggle-btn {
-            background: #f5f3f0 !important;
-            color: #1A1A1A !important;
-            border: 1px solid #f0edeb !important;
-        }
-        body.light-theme .theme-toggle-btn:hover {
-            background: #e8e5e2 !important;
         }

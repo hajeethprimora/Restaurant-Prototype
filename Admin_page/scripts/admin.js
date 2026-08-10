@@ -67,29 +67,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ─── SUB-HEADER NAV (hover to reveal; tap-to-toggle on touch devices) ──
-function toggleSubheader() {
-    const wrap = document.getElementById('appHeaderWrap');
-    if (wrap) wrap.classList.toggle('expanded');
-}
-window.toggleSubheader = toggleSubheader;
-
-document.addEventListener('click', (e) => {
-    const wrap = document.getElementById('appHeaderWrap');
-    if (wrap && wrap.classList.contains('expanded') && !wrap.contains(e.target)) {
-        wrap.classList.remove('expanded');
-    }
-});
-
-// One-time teaser: briefly auto-open the sub-header on first load so users
-// discover it exists, instead of relying on them to stumble onto the hover.
-function teaseSubheaderReveal() {
-    const wrap = document.getElementById('appHeaderWrap');
-    if (!wrap) return;
-    setTimeout(() => wrap.classList.add('expanded'), 500);
-    setTimeout(() => wrap.classList.remove('expanded'), 2200);
-}
-
 // ─── MODAL SYSTEM ────────────────────────────────────────────
 const modalOverlay = document.getElementById('modalOverlay');
 const modalContent = document.getElementById('modalContent');
@@ -695,7 +672,6 @@ window.executeAssignRole = function () {
 // ─── INIT & STORE SUBSCRIPTION ──────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initUserMenu();
-    teaseSubheaderReveal();
     window.FlameDineStore.subscribe(event => {
         renderBillingFloor();
     });

@@ -1,0 +1,7 @@
+# Netlify Redirects Configuration for Flame Dine Multi-Role Prototype
+/           /login.html         200
+/login      /login.html         200
+/customer   /index.html         200
+/admin      /Admin_page/index.html 200
+/kitchen    /kitchen.html       200
+/server     /server.html        200
