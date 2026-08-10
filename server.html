@@ -4,19 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Flame Dine – Server Staff Dashboard</title>
+    <script src="scripts/theme.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <style>
         * { font-family: 'Inter', sans-serif; }
-        body { background: #09090b; color: #f4f4f5; }
+        body { background: #09090b; color: #f4f4f5; transition: background 0.2s ease, color 0.2s ease; }
         .server-header { background: #18181b; border-bottom: 1px solid #27272a; }
-        .ready-card {
-            background: #18181b;
-            border: 1px solid rgba(34, 197, 94, 0.4);
-            border-radius: 18px;
-            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.1);
-        }
         .table-tile {
             background: #18181b;
             border: 2px solid #27272a;
@@ -25,13 +20,139 @@
             transition: all 0.2s ease;
         }
         .table-tile:hover { transform: translateY(-3px); border-color: #52525b; }
-        .table-tile.has-ready { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
-        .table-tile.has-preparing { border-color: #eab308; }
         .pulse-green { animation: pulseGreen 1.5s infinite alternate; }
         @keyframes pulseGreen {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
             100% { box-shadow: 0 0 15px 5px rgba(34, 197, 94, 0.2); }
         }
+        .fade-in { animation: fadeInUp 0.25s ease; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .filter-chip {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid #27272a;
+            background: #18181b;
+            color: #71717a;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .filter-chip:hover { color: #d4d4d8; border-color: #3f3f46; }
+        .filter-chip.active { background: rgba(34, 197, 94, 0.18); color: #6ee7b7; border-color: rgba(34, 197, 94, 0.4); }
+
+        .theme-toggle-btn {
+            width: 40px; height: 40px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            background: #27272a; color: #fbbf24; border: 1px solid #3f3f46;
+            cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;
+        }
+        .theme-toggle-btn:hover { background: #3f3f46; }
+
+        /* ─── VIEW TABS ─── */
+        .view-tab {
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid #27272a;
+            background: #18181b;
+            color: #a1a1aa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .view-tab.active { background: #059669; color: #fff; border-color: #059669; box-shadow: 0 4px 15px rgba(5,150,105,0.3); }
+        .view-tab:hover:not(.active) { color: #e4e4e7; border-color: #3f3f46; }
+
+        .table-selector-chip {
+            padding: 12px 0;
+            border-radius: 10px;
+            border: 1px solid #27272a;
+            background: #18181b;
+            color: #a1a1aa;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .table-selector-chip:hover { border-color: #3f3f46; color: #e4e4e7; }
+        .table-selector-chip.active { background: #059669; color: #fff; border-color: #059669; }
+
+        /* ─── DISH VIEW KANBAN BOARD (same pattern as Kitchen) ─── */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            align-items: start;
+        }
+        .kanban-column {
+            background: #0f0f11;
+            border: 1px solid #27272a;
+            border-radius: 20px;
+            padding: 14px;
+            min-height: 120px;
+        }
+        .kanban-column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 6px 14px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #1f1f23;
+        }
+        .kanban-column-title { font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .kanban-count { font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 999px; }
+        .kanban-card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+        .kanban-card:last-child { margin-bottom: 0; }
+        .kanban-empty-col { text-align: center; padding: 28px 10px; color: #52525b; font-size: 12px; font-weight: 600; }
+
+        /* ─── LIGHT THEME ─── */
+        :root[data-theme="light"] body { background: #f4f4f6; color: #18181b; }
+        :root[data-theme="light"] .server-header { background: #ffffff; border-color: #e4e4e7; }
+        :root[data-theme="light"] .server-header .text-white,
+        :root[data-theme="light"] .server-header h1 { color: #18181b !important; }
+        :root[data-theme="light"] .server-header .text-zinc-400 { color: #71717a !important; }
+        :root[data-theme="light"] .server-header .text-zinc-200 { color: #27272a !important; }
+        :root[data-theme="light"] .bg-zinc-950 { background: #f4f4f6 !important; }
+        :root[data-theme="light"] .bg-zinc-900,
+        :root[data-theme="light"] .bg-zinc-800,
+        :root[data-theme="light"] .bg-zinc-900\/50 { background: #ffffff !important; }
+        :root[data-theme="light"] .border-zinc-800,
+        :root[data-theme="light"] .border-zinc-700,
+        :root[data-theme="light"] .border-zinc-800\/80 { border-color: #e4e4e7 !important; }
+        :root[data-theme="light"] .text-zinc-300,
+        :root[data-theme="light"] .text-zinc-400 { color: #52525b !important; }
+        :root[data-theme="light"] .text-zinc-500,
+        :root[data-theme="light"] .text-zinc-600 { color: #71717a !important; }
+        :root[data-theme="light"] .theme-toggle-btn { background: #f1f5f9; border-color: #e4e4e7; color: #ea580c; }
+        :root[data-theme="light"] .theme-toggle-btn:hover { background: #e4e4e7; }
+        :root[data-theme="light"] .table-tile,
+        :root[data-theme="light"] .kanban-card { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        :root[data-theme="light"] .table-tile .text-white,
+        :root[data-theme="light"] .kanban-card .text-white { color: #18181b !important; }
+        :root[data-theme="light"] .kanban-column { background: #fafafa; border-color: #e4e4e7; }
+        :root[data-theme="light"] .kanban-column-header { border-color: #ececee; }
+        :root[data-theme="light"] .filter-chip,
+        :root[data-theme="light"] .view-tab:not(.active) { background: #fff; border-color: #e4e4e7; color: #52525b; }
+        :root[data-theme="light"] input { background: #fff !important; color: #18181b !important; }
+        :root[data-theme="light"] input::placeholder { color: #a1a1aa !important; }
+        :root[data-theme="light"] #tableDrawer > div { background: #fff !important; }
+        :root[data-theme="light"] #tableDrawer .text-white { color: #18181b !important; }
+        :root[data-theme="light"] #tableDrawer .bg-zinc-950 { background: #f8fafc !important; }
+        :root[data-theme="light"] #tableSelectorModal > div { background: #fff !important; }
+        :root[data-theme="light"] #tableSelectorModal .text-white { color: #18181b !important; }
+        :root[data-theme="light"] .table-selector-chip:not(.active) { background: #fff; border-color: #e4e4e7; color: #52525b; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -53,8 +174,19 @@
 
         <!-- Controls -->
         <div class="flex items-center gap-3">
+            <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Theme">
+                <i id="themeToggleIcon" class="fas fa-sun"></i>
+            </button>
+            <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-sm font-semibold flex items-center gap-2" title="Toggle Bell Sound">
+                <i class="fas fa-volume-up text-emerald-400" id="soundIcon"></i>
+                <span class="hidden sm:inline">Bell On</span>
+            </button>
             <button onclick="simulateCallWaiter()" class="px-3 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold hover:bg-amber-500/30 transition flex items-center gap-1.5">
                 <i class="fas fa-hand-paper"></i> Test Call Waiter
+            </button>
+            <button onclick="reloadDemoData()" class="p-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-sm font-semibold flex items-center gap-2" title="Reset to Demo Data">
+                <i class="fas fa-rotate-right"></i>
+                <span class="hidden sm:inline">Reload Demo</span>
             </button>
             <a href="login.html" class="p-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-sm font-semibold flex items-center gap-2">
                 <i class="fas fa-exchange-alt"></i>
@@ -76,46 +208,59 @@
     </div>
 
     <!-- MAIN BODY -->
-    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-8">
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+
+        <!-- MY TABLES (which tables this login is covering — a single shared
+             login is used by several servers, so each picks their own set) -->
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mr-1">My Tables:</span>
+            <button id="allTablesBtn" class="view-tab active" onclick="setTableFilterMode('all')"><i class="fas fa-border-all mr-1.5"></i>All Tables</button>
+            <button id="selectTablesBtn" class="view-tab" onclick="openTableSelector()"><i class="fas fa-check-square mr-1.5"></i>Select Tables</button>
+        </div>
 
         <!-- WAITER CALL ALERTS -->
         <div id="waiterCallArea" class="hidden space-y-3">
             <!-- Rendered by JS -->
         </div>
 
-        <!-- READY FOR PICKUP SECTION -->
-        <section>
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-black text-white flex items-center gap-2">
-                    <i class="fas fa-bell text-emerald-400"></i>
-                    Ready for Pickup (Kitchen Hand-Off)
-                    <span id="readyBadge" class="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">0 Items</span>
-                </h2>
-                <button id="batchPickupBtn" onclick="pickupAllReady()" class="hidden text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition active:scale-95">
-                    <i class="fas fa-check-double mr-1"></i> Pick Up All Ready
-                </button>
-            </div>
-
-            <div id="readyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Ready items cards dynamically rendered -->
-            </div>
-
-            <!-- Empty Ready Feed -->
-            <div id="emptyReadyFeed" class="text-center py-10 bg-zinc-900/50 rounded-2xl border border-zinc-800">
-                <i class="fas fa-clock text-zinc-600 text-3xl mb-2 block"></i>
-                <div class="text-sm font-bold text-zinc-400">No dishes waiting for pickup</div>
-                <div class="text-xs text-zinc-600 mt-0.5">Kitchen staff will mark items ready here in real time.</div>
-            </div>
-        </section>
-
-        <!-- ACTIVE TABLES FLOOR MAP -->
+        <!-- TABLE VIEW / DISH VIEW TOGGLE -->
         <section class="border-t border-zinc-800 pt-8">
-            <h2 class="text-lg font-black text-white mb-4 flex items-center gap-2">
-                <i class="fas fa-th text-zinc-400"></i>
-                Dining Floor Overview (Tables 1 – 12)
-            </h2>
-            <div id="tablesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <!-- Table Tiles rendered dynamically -->
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div class="flex items-center gap-2" id="viewTabs">
+                    <button class="view-tab active" data-view="table" onclick="setActiveView('table')"><i class="fas fa-th mr-1.5"></i>Table View</button>
+                    <button class="view-tab" data-view="dish" onclick="setActiveView('dish')"><i class="fas fa-utensils mr-1.5"></i>Dish View</button>
+                </div>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 text-xs"></i>
+                    <input type="text" id="floorSearchInput" placeholder="Search table #" class="pl-8 pr-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 w-32" />
+                </div>
+            </div>
+
+            <!-- TABLE VIEW -->
+            <div id="tableViewSection">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                    <span id="floorCountBadge" class="text-xs font-semibold text-zinc-500"></span>
+                    <div id="floorFilterChips" class="flex items-center gap-1.5 flex-wrap"></div>
+                </div>
+                <div id="tablesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Table Tiles rendered dynamically -->
+                </div>
+                <div id="emptyTablesToggleWrap" class="hidden mt-4 text-center">
+                    <button id="emptyTablesToggleBtn" onclick="toggleEmptyTables()" class="text-xs font-bold text-zinc-500 hover:text-zinc-300 transition px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700"></button>
+                </div>
+            </div>
+
+            <!-- DISH VIEW: kanban board grouped by stage (Preparing / Ready / Picked Up),
+                 same visual pattern as the Kitchen board — replaces the old
+                 always-on "Ready for Pickup" section. -->
+            <div id="dishViewSection" class="hidden">
+                <div id="dishKanbanBoard" class="kanban-board">
+                    <!-- Columns rendered dynamically -->
+                </div>
+                <div id="emptyDishKanban" class="hidden text-center py-10 bg-zinc-900/50 rounded-2xl border border-zinc-800 text-zinc-500 text-sm">
+                    <i class="fas fa-utensils text-2xl block mb-2 opacity-40"></i>
+                    No active dishes right now.
+                </div>
             </div>
         </section>
     </main>
@@ -141,6 +286,24 @@
                 <button onclick="closeTableDrawer()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl text-sm">
                     Close Drawer
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLE SELECTOR MODAL: pick any combination of tables to cover -->
+    <div id="tableSelectorModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md p-6">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-lg font-black text-white">Select Your Tables</h3>
+                <button onclick="closeTableSelector()" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center">&times;</button>
+            </div>
+            <p class="text-xs text-zinc-400 mb-4">Tap any number of tables you're covering this shift. The dashboard will only show these until you switch back to All Tables.</p>
+            <div id="tableSelectorGrid" class="grid grid-cols-4 gap-2 mb-6">
+                <!-- Table toggle buttons rendered by JS -->
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeTableSelector()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-2.5 rounded-xl text-sm">Cancel</button>
+                <button onclick="applyTableSelection()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm">Apply</button>
             </div>
         </div>
     </div>

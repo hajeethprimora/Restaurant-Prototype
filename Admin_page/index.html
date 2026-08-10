@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flame Dine – Admin Dashboard</title>
+    <script src="../scripts/theme.js"></script>
 
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,6 +28,10 @@
                         <span>Menu</span><i class="fas fa-chevron-down"></i>
                     </button>
                 </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Theme">
+                    <i id="themeToggleIcon" class="fas fa-sun"></i>
+                </button>
                 <div class="user-menu" id="userMenu">
                     <button class="user-avatar-btn" id="userAvatarBtn" onclick="toggleUserMenu()">RK</button>
                     <div class="user-dropdown hidden" id="userDropdown">
@@ -37,6 +42,7 @@
                         <div class="user-dropdown-divider"></div>
                         <button class="user-dropdown-item logout-item" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </div>
+                </div>
                 </div>
             </div>
 

@@ -696,6 +696,7 @@ window.executeAssignRole = function () {
 document.addEventListener('DOMContentLoaded', () => {
     initUserMenu();
     teaseSubheaderReveal();
+    window.FlameDineTheme.wireToggleButton('themeToggleBtn', 'themeToggleIcon');
     window.FlameDineStore.subscribe(event => {
         renderBillingFloor();
     });

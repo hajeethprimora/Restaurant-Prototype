@@ -5,14 +5,46 @@
 (function () {
     let staffUser = { name: 'Priya Sharma', role: 'SERVER' };
     let activeDrawerTable = null;
+    let soundEnabled = true;
+    let floorSearchQuery = '';
+    let floorStatusFilter = 'all'; // all | ready | preparing | open | empty
+    let showAllEmptyTables = false;
+    let activeView = 'table'; // table | dish
+
+    const FLOOR_FILTERS = [
+        { id: 'all', label: 'All' },
+        { id: 'ready', label: 'Ready' },
+        { id: 'preparing', label: 'Preparing' },
+        { id: 'open', label: 'Open' },
+        { id: 'empty', label: 'Empty' }
+    ];
+
+    // A single shared login covers several servers in this demo store, so each
+    // server picks exactly which tables they're covering this shift. "All Tables"
+    // shows everything; "Select Tables" narrows the whole dashboard (waiter calls,
+    // both views) down to whatever combination they choose.
+    const TABLE_FILTER_MODE_KEY = 'flame_dine_table_filter_mode';
+    const SELECTED_TABLES_KEY = 'flame_dine_selected_tables';
+    let tableFilterMode = localStorage.getItem(TABLE_FILTER_MODE_KEY) || 'all'; // all | selected
+    let selectedTables = [];
+    let pendingSelectedTables = []; // working copy while the picker modal is open
+    try {
+        selectedTables = JSON.parse(localStorage.getItem(SELECTED_TABLES_KEY) || '[]');
+    } catch (e) { selectedTables = []; }
+
+    const STATUS_TAGS = {
+        placed: `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase">NEW</span>`,
+        claimed: `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">CLAIMED</span>`,
+        preparing: `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 uppercase">PREPARING</span>`,
+        ready: `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">READY</span>`,
+        picked_up: `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase">PICKED UP</span>`
+    };
 
     // DOM Elements
     const serverNameDisplayEl = document.getElementById('serverNameDisplay');
-    const readyGridEl = document.getElementById('readyGrid');
-    const emptyReadyFeedEl = document.getElementById('emptyReadyFeed');
     const tablesGridEl = document.getElementById('tablesGrid');
-    const readyBadgeEl = document.getElementById('readyBadge');
-    const batchPickupBtnEl = document.getElementById('batchPickupBtn');
+    const dishKanbanBoardEl = document.getElementById('dishKanbanBoard');
+    const emptyDishKanbanEl = document.getElementById('emptyDishKanban');
     const waiterCallAreaEl = document.getElementById('waiterCallArea');
 
     // Stat Elements
@@ -27,6 +59,7 @@
     const drawerContentEl = document.getElementById('drawerContent');
 
     function playServerBell() {
+        if (!soundEnabled) return;
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx.createOscillator();
@@ -42,6 +75,11 @@
         } catch (e) {}
     }
 
+    function inSection(tableNumber) {
+        if (tableFilterMode !== 'selected') return true;
+        return selectedTables.includes(tableNumber);
+    }
+
     function init() {
         const savedUser = localStorage.getItem('flame_dine_user');
         if (savedUser) {
@@ -51,6 +89,18 @@
             } catch (e) {}
         }
         if (serverNameDisplayEl) serverNameDisplayEl.textContent = staffUser.name;
+
+        window.FlameDineTheme.wireToggleButton('themeToggleBtn', 'themeToggleIcon');
+
+        renderTableFilterButtons();
+        renderFloorFilterChips();
+        const floorSearchInputEl = document.getElementById('floorSearchInput');
+        if (floorSearchInputEl) {
+            floorSearchInputEl.addEventListener('input', (e) => {
+                floorSearchQuery = e.target.value.trim();
+                renderServerDashboard();
+            });
+        }
 
         renderServerDashboard();
 
@@ -69,11 +119,77 @@
         });
     }
 
-    function renderServerDashboard() {
-        const readyItems = window.FlameDineStore.getServerQueue();
-        const allItems = window.FlameDineStore.load().orderItems || [];
+    function renderTableFilterButtons() {
+        const allBtn = document.getElementById('allTablesBtn');
+        const selectBtn = document.getElementById('selectTablesBtn');
+        if (allBtn) allBtn.classList.toggle('active', tableFilterMode === 'all');
+        if (selectBtn) {
+            selectBtn.classList.toggle('active', tableFilterMode === 'selected');
+            selectBtn.innerHTML = tableFilterMode === 'selected' && selectedTables.length > 0
+                ? `<i class="fas fa-check-square mr-1.5"></i>Select Tables (${selectedTables.length})`
+                : `<i class="fas fa-check-square mr-1.5"></i>Select Tables`;
+        }
+    }
+
+    window.setTableFilterMode = function (mode) {
+        tableFilterMode = mode;
+        localStorage.setItem(TABLE_FILTER_MODE_KEY, mode);
+        renderTableFilterButtons();
+        renderServerDashboard();
+    };
+
+    function renderTableSelectorGrid() {
+        const grid = document.getElementById('tableSelectorGrid');
+        if (!grid) return;
         const tables = window.FlameDineStore.getTables();
-        const waiterCalls = window.FlameDineStore.getWaiterCalls();
+        grid.innerHTML = tables.map(t => `
+            <button onclick="toggleTableInSelector(${t.number})" class="table-selector-chip ${pendingSelectedTables.includes(t.number) ? 'active' : ''}">${t.number}</button>
+        `).join('');
+    }
+
+    window.openTableSelector = function () {
+        pendingSelectedTables = [...selectedTables];
+        renderTableSelectorGrid();
+        const modal = document.getElementById('tableSelectorModal');
+        if (modal) modal.classList.remove('hidden');
+    };
+
+    window.closeTableSelector = function () {
+        const modal = document.getElementById('tableSelectorModal');
+        if (modal) modal.classList.add('hidden');
+    };
+
+    window.toggleTableInSelector = function (num) {
+        const idx = pendingSelectedTables.indexOf(num);
+        if (idx === -1) pendingSelectedTables.push(num);
+        else pendingSelectedTables.splice(idx, 1);
+        renderTableSelectorGrid();
+    };
+
+    window.applyTableSelection = function () {
+        selectedTables = [...pendingSelectedTables];
+        localStorage.setItem(SELECTED_TABLES_KEY, JSON.stringify(selectedTables));
+        tableFilterMode = 'selected';
+        localStorage.setItem(TABLE_FILTER_MODE_KEY, 'selected');
+        renderTableFilterButtons();
+        window.closeTableSelector();
+        renderServerDashboard();
+    };
+
+    window.setActiveView = function (view) {
+        activeView = view;
+        document.querySelectorAll('#viewTabs .view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+        const tableSection = document.getElementById('tableViewSection');
+        const dishSection = document.getElementById('dishViewSection');
+        if (tableSection) tableSection.classList.toggle('hidden', view !== 'table');
+        if (dishSection) dishSection.classList.toggle('hidden', view !== 'dish');
+    };
+
+    function renderServerDashboard() {
+        const allItems = (window.FlameDineStore.load().orderItems || []).filter(i => inSection(i.tableNumber));
+        const tables = window.FlameDineStore.getTables().filter(t => inSection(t.number));
+        const waiterCalls = window.FlameDineStore.getWaiterCalls().filter(c => inSection(c.tableNumber));
+        const readyItems = window.FlameDineStore.getServerQueue().filter(i => inSection(i.tableNumber));
 
         // Stats
         const readyCount = readyItems.filter(i => i.status === 'ready').length;
@@ -83,21 +199,10 @@
         if (statReadyCountEl) statReadyCountEl.textContent = readyCount;
         if (statPickedCountEl) statPickedCountEl.textContent = pickedCount;
         if (statServedCountEl) statServedCountEl.textContent = servedCount;
-        if (readyBadgeEl) readyBadgeEl.textContent = `${readyCount} Ready`;
 
-        if (batchPickupBtnEl) {
-            if (readyCount > 0) batchPickupBtnEl.classList.remove('hidden');
-            else batchPickupBtnEl.classList.add('hidden');
-        }
-
-        // Render Waiter Calls
         renderWaiterCalls(waiterCalls);
-
-        // Render Ready Items
-        renderReadyFeed(readyItems);
-
-        // Render Tables Floor Map
         renderTablesFloor(tables, allItems);
+        renderDishKanban(allItems);
     }
 
     function renderWaiterCalls(calls) {
@@ -128,113 +233,188 @@
         `).join('');
     }
 
-    function renderReadyFeed(items) {
-        if (items.length === 0) {
-            readyGridEl.innerHTML = '';
-            emptyReadyFeedEl.classList.remove('hidden');
-            return;
+    function renderFloorFilterChips() {
+        const wrap = document.getElementById('floorFilterChips');
+        if (!wrap) return;
+        wrap.innerHTML = FLOOR_FILTERS.map(f => `
+            <button onclick="setFloorFilter('${f.id}')" class="filter-chip ${floorStatusFilter === f.id ? 'active' : ''}">${f.label}</button>
+        `).join('');
+    }
+    window.setFloorFilter = function (id) {
+        floorStatusFilter = id;
+        renderFloorFilterChips();
+        renderServerDashboard();
+    };
+
+    window.toggleEmptyTables = function () {
+        showAllEmptyTables = !showAllEmptyTables;
+        renderServerDashboard();
+    };
+
+    function tableStatus(tableNumber, allItems) {
+        const tableItems = allItems.filter(i => i.tableNumber === tableNumber);
+        const hasReady = tableItems.some(i => i.status === 'ready');
+        const hasPreparing = tableItems.some(i => i.status === 'preparing' || i.status === 'placed' || i.status === 'claimed');
+        const activeSessionForTable = window.FlameDineStore.getOpenSessionForTable(tableNumber);
+        if (hasReady) return 'ready';
+        if (hasPreparing) return 'preparing';
+        if (activeSessionForTable) return 'open';
+        return 'empty';
+    }
+
+    function tileVisual(status) {
+        if (status === 'ready') {
+            return {
+                borderClass: 'border-emerald-500 bg-emerald-500/10 pulse-green',
+                badgeHtml: `<span class="text-[10px] font-bold text-emerald-400 flex items-center gap-1"><i class="fas fa-bell"></i> Ready!</span>`
+            };
         }
-
-        emptyReadyFeedEl.classList.add('hidden');
-
-        // Group ready items by table
-        const grouped = {};
-        items.forEach(item => {
-            const table = item.tableNumber;
-            if (!grouped[table]) grouped[table] = [];
-            grouped[table].push(item);
-        });
-
-        readyGridEl.innerHTML = Object.keys(grouped).map(tableNum => {
-            const tableItems = grouped[tableNum];
-            const itemsHtml = tableItems.map(item => {
-                let actionBtn = '';
-                if (item.status === 'ready') {
-                    actionBtn = `
-                        <button onclick="updateStatus('${item.id}', 'picked_up')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition active:scale-95">
-                            <i class="fas fa-hand-holding mr-1"></i> Pick Up
-                        </button>
-                    `;
-                } else if (item.status === 'picked_up') {
-                    actionBtn = `
-                        <button onclick="updateStatus('${item.id}', 'served')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition active:scale-95">
-                            <i class="fas fa-check-circle mr-1"></i> Mark Served
-                        </button>
-                    `;
-                }
-
-                const statusTag = item.status === 'ready'
-                    ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">READY</span>`
-                    : `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase">PICKED UP</span>`;
-
-                return `
-                    <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-zinc-800">
-                        <div>
-                            <div class="font-bold text-sm text-white">${item.name} <span class="text-emerald-400 font-black">×${item.qty}</span></div>
-                            <div class="text-xs text-zinc-400 mt-0.5 flex items-center gap-2">
-                                <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold text-[10px]">${item.station}</span>
-                                <span>Round ${item.round_no || 1}</span>
-                            </div>
-                            ${item.note ? `<div class="text-xs text-amber-300/80 italic mt-0.5">"${item.note}"</div>` : ''}
-                        </div>
-                        <div class="flex flex-col items-end gap-1.5">
-                            ${statusTag}
-                            ${actionBtn}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            return `
-                <div class="ready-card p-5">
-                    <div class="flex items-center justify-between border-b border-zinc-800 pb-3 mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-base border border-emerald-500/30">
-                                T${tableNum}
-                            </span>
-                            <div class="font-black text-base text-white">Table ${tableNum}</div>
-                        </div>
-                        <button onclick="openTableDrawer(${tableNum})" class="text-xs font-bold text-emerald-400 hover:underline">
-                            View All Orders &rarr;
-                        </button>
-                    </div>
-                    <div class="space-y-2">
-                        ${itemsHtml}
-                    </div>
-                </div>
-            `;
-        }).join('');
+        if (status === 'preparing') {
+            return {
+                borderClass: 'border-amber-500/70 bg-amber-500/5',
+                badgeHtml: `<span class="text-[10px] font-bold text-amber-400">Preparing</span>`
+            };
+        }
+        if (status === 'open') {
+            return {
+                borderClass: 'border-blue-500/50 bg-blue-500/5',
+                badgeHtml: `<span class="text-[10px] font-bold text-blue-400">Open Session</span>`
+            };
+        }
+        return { borderClass: 'border-zinc-800', badgeHtml: `<span class="text-[10px] text-zinc-500">Empty</span>` };
     }
 
     function renderTablesFloor(tables, allItems) {
-        tablesGridEl.innerHTML = tables.map(t => {
-            const tableItems = allItems.filter(i => i.tableNumber === t.number);
-            const hasReady = tableItems.some(i => i.status === 'ready');
-            const hasPreparing = tableItems.some(i => i.status === 'preparing' || i.status === 'placed' || i.status === 'claimed');
-            const activeSession = window.FlameDineStore.getOpenSessionForTable(t.number);
+        const computed = tables.map(t => ({ table: t, status: tableStatus(t.number, allItems) }));
 
-            let borderClass = 'border-zinc-800';
-            let badgeHtml = `<span class="text-[10px] text-zinc-500">Empty</span>`;
+        const query = floorSearchQuery.toLowerCase();
+        let visible = computed.filter(c => {
+            if (query && !String(c.table.number).includes(query)) return false;
+            if (floorStatusFilter !== 'all' && c.status !== floorStatusFilter) return false;
+            return true;
+        });
 
-            if (hasReady) {
-                borderClass = 'border-emerald-500 bg-emerald-500/10 pulse-green';
-                badgeHtml = `<span class="text-[10px] font-bold text-emerald-400 flex items-center gap-1"><i class="fas fa-bell"></i> Ready!</span>`;
-            } else if (hasPreparing) {
-                borderClass = 'border-amber-500/70 bg-amber-500/5';
-                badgeHtml = `<span class="text-[10px] font-bold text-amber-400">Preparing</span>`;
-            } else if (activeSession) {
-                borderClass = 'border-blue-500/50 bg-blue-500/5';
-                badgeHtml = `<span class="text-[10px] font-bold text-blue-400">Open Session</span>`;
-            }
+        // Only collapse empty tables when the user isn't actively searching/filtering —
+        // an idle floor of a dozen tables is mostly noise, so tuck them away by default.
+        const isDefaultView = !query && floorStatusFilter === 'all';
+        let hiddenEmptyCount = 0;
+        if (isDefaultView && !showAllEmptyTables) {
+            const nonEmpty = visible.filter(c => c.status !== 'empty');
+            hiddenEmptyCount = visible.length - nonEmpty.length;
+            visible = nonEmpty;
+        }
 
-            return `
-                <div onclick="openTableDrawer(${t.number})" class="table-tile ${borderClass} p-4 flex flex-col items-center justify-center text-center relative">
-                    <div class="text-xs text-zinc-500 font-semibold mb-1">TABLE</div>
-                    <div class="text-2xl font-black text-white">${t.number}</div>
-                    <div class="mt-2">${badgeHtml}</div>
+        const countBadge = document.getElementById('floorCountBadge');
+        if (countBadge) countBadge.textContent = `(${visible.length} of ${tables.length})`;
+
+        if (visible.length === 0) {
+            tablesGridEl.innerHTML = `
+                <div class="col-span-full text-center py-10 text-zinc-600 text-sm">
+                    <i class="fas fa-filter text-2xl block mb-2 opacity-50"></i>
+                    No tables match this filter.
                 </div>
             `;
-        }).join('');
+        } else {
+            tablesGridEl.innerHTML = visible.map(({ table: t, status }) => {
+                const { borderClass, badgeHtml } = tileVisual(status);
+                return `
+                    <div onclick="openTableDrawer(${t.number})" class="table-tile fade-in ${borderClass} p-4 flex flex-col items-center justify-center text-center relative">
+                        <div class="text-xs text-zinc-500 font-semibold mb-1">TABLE</div>
+                        <div class="text-2xl font-black text-white">${t.number}</div>
+                        <div class="mt-2">${badgeHtml}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        const toggleWrap = document.getElementById('emptyTablesToggleWrap');
+        const toggleBtn = document.getElementById('emptyTablesToggleBtn');
+        if (toggleWrap && toggleBtn) {
+            if (isDefaultView && (hiddenEmptyCount > 0 || showAllEmptyTables)) {
+                toggleWrap.classList.remove('hidden');
+                toggleBtn.innerHTML = showAllEmptyTables
+                    ? `<i class="fas fa-chevron-up mr-1"></i> Hide empty tables`
+                    : `<i class="fas fa-chevron-down mr-1"></i> Show ${hiddenEmptyCount} empty table${hiddenEmptyCount === 1 ? '' : 's'}`;
+            } else {
+                toggleWrap.classList.add('hidden');
+            }
+        }
+    }
+
+    // Dish View: a kanban board grouped by stage (Preparing / Ready / Picked Up) —
+    // same visual pattern as the Kitchen board. Table number is just a tag on each
+    // card, since this view is about pickup/serve workflow, not floor layout.
+    function dishKanbanCard(item, actionBtnHtml) {
+        return `
+            <div class="kanban-card">
+                <div class="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                        <div class="font-bold text-sm text-white">${item.name} <span class="text-emerald-400 font-black">×${item.qty}</span></div>
+                        <div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1.5 flex-wrap">
+                            <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold">T${item.tableNumber}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold">${item.station}</span>
+                            <span>Rnd ${item.round_no || 1}</span>
+                        </div>
+                    </div>
+                    ${STATUS_TAGS[item.status] || ''}
+                </div>
+                ${item.note ? `<div class="text-xs text-amber-300/90 font-medium italic mb-2"><i class="fas fa-comment-dots mr-1"></i>"${item.note}"</div>` : ''}
+                ${actionBtnHtml}
+            </div>
+        `;
+    }
+
+    function renderDishKanban(allItems) {
+        if (!dishKanbanBoardEl) return;
+        const query = floorSearchQuery.toLowerCase();
+        const filtered = query ? allItems.filter(i => String(i.tableNumber).includes(query)) : allItems;
+
+        const preparingItems = filtered
+            .filter(i => ['placed', 'claimed', 'preparing'].includes(i.status))
+            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        const readyItems = filtered
+            .filter(i => i.status === 'ready')
+            .sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+        const pickedUpItems = filtered
+            .filter(i => i.status === 'picked_up')
+            .sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+
+        const total = preparingItems.length + readyItems.length + pickedUpItems.length;
+        if (emptyDishKanbanEl) emptyDishKanbanEl.classList.toggle('hidden', total > 0);
+        if (total === 0) {
+            dishKanbanBoardEl.innerHTML = '';
+            return;
+        }
+
+        const columns = [
+            {
+                title: 'Preparing', icon: 'fa-fire', color: 'amber', items: preparingItems,
+                render: item => dishKanbanCard(item, '')
+            },
+            {
+                title: 'Ready for Pickup', icon: 'fa-bell', color: 'emerald', items: readyItems,
+                render: item => dishKanbanCard(item, `<button onclick="updateStatus('${item.id}', 'picked_up')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition active:scale-95 w-full mt-1"><i class="fas fa-hand-holding mr-1"></i> Pick Up</button>`)
+            },
+            {
+                title: 'Picked Up', icon: 'fa-person-walking', color: 'blue', items: pickedUpItems,
+                render: item => dishKanbanCard(item, `<button onclick="updateStatus('${item.id}', 'served')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition active:scale-95 w-full mt-1"><i class="fas fa-check-circle mr-1"></i> Mark Served</button>`)
+            }
+        ];
+
+        dishKanbanBoardEl.innerHTML = columns.map(col => `
+            <div class="kanban-column">
+                <div class="kanban-column-header">
+                    <div class="kanban-column-title text-${col.color}-400"><i class="fas ${col.icon}"></i> ${col.title}</div>
+                    <div class="flex items-center gap-2">
+                        ${col.title === 'Ready for Pickup' && col.items.length > 0
+                            ? `<button onclick="pickupAllReady()" class="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition">Pick Up All</button>`
+                            : ''}
+                        <span class="kanban-count bg-${col.color}-500/15 text-${col.color}-400 border border-${col.color}-500/30">${col.items.length}</span>
+                    </div>
+                </div>
+                ${col.items.length === 0 ? `<div class="kanban-empty-col">Nothing here right now</div>` : col.items.map(col.render).join('')}
+            </div>
+        `).join('');
     }
 
     window.openTableDrawer = function (tableNum) {
@@ -298,7 +478,7 @@
     };
 
     window.pickupAllReady = function () {
-        const readyItems = window.FlameDineStore.getServerQueue().filter(i => i.status === 'ready');
+        const readyItems = window.FlameDineStore.getServerQueue().filter(i => i.status === 'ready' && inSection(i.tableNumber));
         readyItems.forEach(item => {
             window.FlameDineStore.updateOrderItemStatus(item.id, 'picked_up', staffUser.name);
         });
@@ -310,6 +490,21 @@
 
     window.simulateCallWaiter = function () {
         window.FlameDineStore.callWaiter(5);
+    };
+
+    window.toggleSound = function () {
+        soundEnabled = !soundEnabled;
+        const btn = document.getElementById('soundToggleBtn');
+        const icon = document.getElementById('soundIcon');
+        if (btn) btn.querySelector('span').textContent = soundEnabled ? 'Bell On' : 'Bell Off';
+        if (icon) icon.className = soundEnabled ? 'fas fa-volume-up text-emerald-400' : 'fas fa-volume-mute text-zinc-500';
+    };
+
+    window.reloadDemoData = function () {
+        if (confirm('Reset the shared demo data (orders, sessions, bills) back to the seed state? This affects all open FlameDine tabs.')) {
+            window.FlameDineStore.resetToDefaults();
+            renderServerDashboard();
+        }
     };
 
     document.addEventListener('DOMContentLoaded', init);

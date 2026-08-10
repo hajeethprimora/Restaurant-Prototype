@@ -167,6 +167,22 @@ body {
 }
 .user-avatar-btn:hover { transform: scale(1.05); }
 
+.theme-toggle-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.08);
+    color: #fbbf24;
+    border: 1px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+.theme-toggle-btn:hover { background: rgba(255,255,255,0.15); }
+
 .user-dropdown {
     position: absolute;
     top: calc(100% + 10px);
@@ -1148,3 +1164,59 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
     .stats-row { grid-template-columns: 1fr; }
     .donut-container { flex-direction: column; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK THEME — the header stays permanently dark by design in both
+   themes (it's a brand accent), so only the body/content is themed.
+   ═══════════════════════════════════════════════════════════════ */
+:root[data-theme="dark"] body { background: #0f0f11; color: #e4e4e7; }
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .stat-card,
+:root[data-theme="dark"] .table-wrap,
+:root[data-theme="dark"] .menu-group,
+:root[data-theme="dark"] .grid-cards .card-item,
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .combo-panel,
+:root[data-theme="dark"] .user-dropdown {
+    background: #18181b;
+    border-color: #27272a;
+    color: #e4e4e7;
+}
+:root[data-theme="dark"] .page-header h1,
+:root[data-theme="dark"] .card-title,
+:root[data-theme="dark"] .stat-card .value,
+:root[data-theme="dark"] th,
+:root[data-theme="dark"] td,
+:root[data-theme="dark"] .menu-item-row .name,
+:root[data-theme="dark"] .form-group label,
+:root[data-theme="dark"] .user-dropdown-name,
+:root[data-theme="dark"] .grid-cards .card-item h4 { color: #e4e4e7; }
+:root[data-theme="dark"] .page-header .sub,
+:root[data-theme="dark"] .stat-card .label,
+:root[data-theme="dark"] .card-body,
+:root[data-theme="dark"] .user-dropdown-role { color: #a1a1aa; }
+:root[data-theme="dark"] th { background: #1f1f23; color: #a1a1aa; border-color: #27272a; }
+:root[data-theme="dark"] td { border-color: #27272a; }
+:root[data-theme="dark"] tr:hover { background: #1f1f23; }
+:root[data-theme="dark"] .menu-item-row { background: #1f1f23; }
+:root[data-theme="dark"] .menu-item-row:hover { background: #27272a; }
+:root[data-theme="dark"] .form-group input,
+:root[data-theme="dark"] .form-group select,
+:root[data-theme="dark"] .form-group textarea,
+:root[data-theme="dark"] .combo-trigger,
+:root[data-theme="dark"] .combo-panel { background: #0f0f11; border-color: #3f3f46; color: #e4e4e7; }
+:root[data-theme="dark"] .combo-option:hover { background: #27272a; }
+:root[data-theme="dark"] .combo-add-input { background: #18181b; border-color: #3f3f46; color: #e4e4e7; }
+:root[data-theme="dark"] .quick-action-btn { background: #1f1f23; border-color: #27272a; color: #e4e4e7; }
+:root[data-theme="dark"] .quick-action-btn:hover { background: #27272a; }
+:root[data-theme="dark"] .btn-outline { border-color: #3f3f46; color: #e4e4e7; }
+:root[data-theme="dark"] .btn-outline:hover { background: #27272a; }
+:root[data-theme="dark"] .card-empty { background: #1f1f23; border-color: #3f3f46; color: #71717a; }
+:root[data-theme="dark"] .card-empty:hover { background: #27272a; }
+:root[data-theme="dark"] .table-popover { background: #27272a; }
+:root[data-theme="dark"] .toggle-switch .track { background: #3f3f46; }
+:root[data-theme="dark"] .modal .modal-header .close { color: #71717a; }
+:root[data-theme="dark"] .modal .modal-header .close:hover { color: #e4e4e7; }
+:root[data-theme="dark"] .user-dropdown-item { color: #e4e4e7; }
+:root[data-theme="dark"] .user-dropdown-item:hover { background: #27272a; }
+:root[data-theme="dark"] .user-dropdown-divider { border-color: #27272a; }
