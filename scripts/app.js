@@ -12,6 +12,7 @@
         let selectedCategory = 'All';
         let currentOrder = null;
         let trackInterval = null;
+        let autoTrackTimer = null;
         let itemSheetItemId = null;
         let itemSheetQtyVal = 1;
 
@@ -50,7 +51,6 @@
         const itemSheetQty = $('itemSheetQty');
         const itemNote = $('itemNote');
         const headerOrderTracker = $('headerOrderTracker');
-        const themeToggleBtn = $('themeToggleBtn');
 
         // Buttons
         const scanBtn = $('scanButton');
@@ -453,20 +453,40 @@
             // Initialize tracker with live store data
             renderTracker(orderId, total);
 
-            // Navigate to success page
+            // Navigate to success page, then auto-forward to the live tracker
             showPage('success');
+            clearAutoTrackTimer();
+            autoTrackTimer = setTimeout(() => {
+                showPage('tracker');
+            }, 2000);
+        }
+
+        function clearAutoTrackTimer() {
+            if (autoTrackTimer) {
+                clearTimeout(autoTrackTimer);
+                autoTrackTimer = null;
+            }
         }
 
         // =============================================================
         // PREPARING TOAST (with avatars)
         // =============================================================
+        function shuffled(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
         function showPreparingToast(items) {
-            const counts = { placed: 0, preparing: 0, ready: 0, served: 0 };
+            const counts = { placed: 0, claimed: 0, preparing: 0, ready: 0, served: 0 };
             items.forEach(item => {
                 if (counts.hasOwnProperty(item.status)) counts[item.status]++;
             });
 
-            const prepCountVal = counts.placed + counts.preparing;
+            const prepCountVal = counts.placed + counts.claimed + counts.preparing;
             const readyCountVal = counts.ready;
             const totalActive = prepCountVal + readyCountVal;
 
@@ -476,15 +496,12 @@
             if (totalActive > 0) {
                 toast.style.display = 'flex';
 
-                // Update text counts
                 const prepCountEl = $('prepCount');
-                const readyCountEl = $('readyCount');
                 const orderAvatarsEl = $('orderAvatars');
                 const prepSectionEl = $('prepSection');
                 const readySectionEl = $('readySection');
 
                 if (prepCountEl) prepCountEl.textContent = prepCountVal;
-                if (readyCountEl) readyCountEl.textContent = readyCountVal;
 
                 // Opacities & Classes for premium UI feel
                 if (prepCountVal > 0) {
@@ -511,24 +528,22 @@
                     readySectionEl.classList.remove('pulse-green-glow');
                 }
 
-                // Generate avatars for dishes that are ready to be picked up (not preparing)
+                // Show up to 3 random dish images for ready items; beyond that, a "N+" badge
                 const readyItemsForAvatars = items.filter(it => it.status === 'ready');
-                let avatarHtml = '';
                 const maxShow = 3;
-                const showCount = Math.min(readyItemsForAvatars.length, maxShow);
+                const shownItems = shuffled(readyItemsForAvatars).slice(0, maxShow);
 
-                for (let i = 0; i < showCount; i++) {
-                    const item = readyItemsForAvatars[i];
+                let avatarHtml = shownItems.map(item => {
                     const imgUrl = getLocalImagePath(item);
-                    avatarHtml += `
+                    return `
                         <div class="avatar">
                             <img src="${imgUrl}" onerror="if(this.src.indexOf('unsplash.com') === -1) { this.src = getDishFallbackImage('${item.name}'); } else { this.style.display='none'; this.nextElementSibling.style.display='block'; }" />
                             <span class="avatar-emoji" style="display:none;">${item.emoji}</span>
                         </div>
                     `;
-                }
+                }).join('');
                 if (readyItemsForAvatars.length > maxShow) {
-                    avatarHtml += `<div class="avatar more">+${readyItemsForAvatars.length - maxShow}</div>`;
+                    avatarHtml += `<div class="avatar more">${readyItemsForAvatars.length}+</div>`;
                 }
                 if (orderAvatarsEl) {
                     orderAvatarsEl.innerHTML = avatarHtml;
@@ -542,33 +557,8 @@
 
         function updateHeaderOrderTracker() {
             headerOrderTracker.style.display = 'flex'; // Permanent!
-            if (!currentOrder) {
-                headerOrderTracker.className = 'header-tracker-btn no-active-order';
-                headerOrderTracker.innerHTML = `<i class="fas fa-receipt text-sm mr-1 text-[#666]"></i> No orders`;
-                return;
-            }
-            const items = currentOrder.items;
-            const counts = { placed: 0, preparing: 0, ready: 0, served: 0 };
-            items.forEach(item => {
-                if (counts.hasOwnProperty(item.status)) counts[item.status]++;
-            });
-            const totalActive = counts.placed + counts.preparing + counts.ready;
-            
-            if (totalActive > 0) {
-                if (counts.preparing > 0) {
-                    headerOrderTracker.className = 'header-tracker-btn border-blazing-fire';
-                    headerOrderTracker.innerHTML = `<i class="fas fa-fire text-sm mr-1"></i> ${counts.preparing} preparing`;
-                } else if (counts.ready > 0) {
-                    headerOrderTracker.className = 'header-tracker-btn border-glowing-green';
-                    headerOrderTracker.innerHTML = `<i class="fas fa-check-circle text-sm mr-1"></i> ${counts.ready} ready!`;
-                } else {
-                    headerOrderTracker.className = 'header-tracker-btn border-glowing-blue';
-                    headerOrderTracker.innerHTML = `<i class="fas fa-receipt text-sm mr-1 text-[#00bcd4]"></i> Placed`;
-                }
-            } else {
-                headerOrderTracker.className = 'header-tracker-btn';
-                headerOrderTracker.innerHTML = `<i class="fas fa-receipt text-sm mr-1 text-[#aaa]"></i> Order served`;
-            }
+            headerOrderTracker.className = 'header-tracker-btn';
+            headerOrderTracker.innerHTML = `<span class="btn-label">Orders</span>`;
         }
 
 
@@ -576,6 +566,14 @@
         // =============================================================
         // ORDER TRACKER
         // =============================================================
+        const itemStatusMeta = {
+            placed: { label: 'Placed', className: 'status-placed' },
+            claimed: { label: 'Claimed', className: 'status-claimed' },
+            preparing: { label: 'Preparing', className: 'status-preparing' },
+            ready: { label: 'Ready', className: 'status-ready' },
+            served: { label: 'Served', className: 'status-served' }
+        };
+
         function renderTracker(orderId, total) {
             const trackTotal = $('trackTotal');
             const trackItems = $('trackItems');
@@ -583,29 +581,33 @@
             trackTotal.textContent = total;
 
             const sortedItems = [...currentOrder.items].sort((a, b) => {
-                const order = { placed: 0, preparing: 1, ready: 2, served: 3 };
+                const order = { placed: 0, claimed: 1, preparing: 2, ready: 3, served: 4 };
                 return (order[a.status] || 0) - (order[b.status] || 0);
             });
 
             trackItems.innerHTML = sortedItems.map(item => {
                 const imgUrl = getLocalImagePath(item);
+                const meta = itemStatusMeta[item.status] || itemStatusMeta.placed;
                 return `
-                    <div class="flex justify-between items-center py-2 border-b border-[#222] last:border-0">
+                    <div class="flex justify-between items-center py-2 border-b border-[#f0edeb] last:border-0">
                         <div class="flex items-center gap-3">
                             <div class="tracker-summary-img-wrap">
                                 <img src="${imgUrl}" onerror="if (this.src.indexOf('unsplash.com') === -1) { this.src = getDishFallbackImage('${item.name.replace(/'/g, "\\'")}'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }" />
                                 <div class="fallback-emoji" style="display:none;">${item.emoji}</div>
                             </div>
-                            <span class="font-medium text-white">${item.name} × ${item.qty}</span>
+                            <div>
+                                <span class="font-medium block" style="color:#1A1A1A;">${item.name} × ${item.qty}</span>
+                                <span class="item-status-badge ${meta.className}">${meta.label}</span>
+                            </div>
                         </div>
-                        <span class="font-bold text-white">₹${item.price * item.qty}</span>
+                        <span class="font-bold" style="color:#1A1A1A;">₹${item.price * item.qty}</span>
                     </div>
                 `;
             }).join('');
 
             // Simulate status changes
             if (trackInterval) clearInterval(trackInterval);
-            const statuses = ['placed', 'preparing', 'ready', 'served'];
+            const statuses = ['placed', 'claimed', 'preparing', 'ready', 'served'];
             trackInterval = setInterval(() => {
                 let changed = false;
                 currentOrder.items.forEach((item) => {
@@ -620,11 +622,11 @@
                 if (changed) {
                     renderTracker(orderId, total);
                     showPreparingToast(currentOrder.items);
-                    const counts = { placed: 0, preparing: 0, ready: 0, served: 0 };
+                    const counts = { placed: 0, claimed: 0, preparing: 0, ready: 0, served: 0 };
                     currentOrder.items.forEach(it => {
                         if (counts.hasOwnProperty(it.status)) counts[it.status]++;
                     });
-                    const totalActive = counts.placed + counts.preparing + counts.ready;
+                    const totalActive = counts.placed + counts.claimed + counts.preparing + counts.ready;
                     if (totalActive === 0) {
                         clearInterval(trackInterval);
                         trackInterval = null;
@@ -658,30 +660,6 @@
         // =============================================================
         searchInput.addEventListener('input', filterItems);
 
-        // Call Waiter Handler
-        const callWaiterBtn = $('callWaiterBtn');
-        if (callWaiterBtn) {
-            callWaiterBtn.addEventListener('click', () => {
-                window.FlameDineStore.callWaiter(5);
-                const notification = document.createElement('div');
-                notification.className = 'order-success-widget show';
-                notification.style.borderColor = 'rgba(234, 179, 8, 0.4)';
-                notification.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
-                notification.innerHTML = `
-                    <div class="success-icon" style="color: #eab308;"><i class="fas fa-hand-paper"></i></div>
-                    <div class="success-details">
-                        <div class="success-title">Waiter Called!</div>
-                        <div class="success-meta">A server has been notified to visit Table 5.</div>
-                    </div>
-                `;
-                document.body.appendChild(notification);
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                    setTimeout(() => notification.remove(), 500);
-                }, 3000);
-            });
-        }
-
         headerOrderTracker.addEventListener('click', () => {
             const session = window.FlameDineStore.getOpenSessionForTable(5);
             if (session) {
@@ -711,6 +689,7 @@
         });
 
         successTrackBtn.addEventListener('click', () => {
+            clearAutoTrackTimer();
             const session = window.FlameDineStore.getOpenSessionForTable(5);
             if (session) {
                 const order = window.FlameDineStore.getOrderForSession(session.id);
@@ -720,13 +699,8 @@
             showPage('tracker');
         });
         successBackMenuBtn.addEventListener('click', () => {
+            clearAutoTrackTimer();
             showPage('menu');
-        });
-
-        themeToggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('light-theme');
-            const isLight = document.body.classList.contains('light-theme');
-            themeToggleBtn.innerHTML = isLight ? `<i class="fas fa-moon"></i>` : `<i class="fas fa-sun"></i>`;
         });
 
         // =============================================================

@@ -12,8 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="style/main.css" />
 </head>
-<body>
-
+<body class="light-theme">
     <!-- ============================================================ -->
     <!-- BOOT LOADER -->
     <!-- ============================================================ -->
@@ -56,18 +55,13 @@
                     <span class="restaurant-name">Flame Dine</span>
                     <span class="table-badge">Table 5</span>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button id="callWaiterBtn" class="header-tracker-btn border-glowing-blue" title="Call Waiter to Table">
-                        <i class="fas fa-hand-paper text-sm mr-1 text-amber-400"></i> Call Waiter
-                    </button>
-                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Theme">
-                        <i class="fas fa-sun"></i>
-                    </button>
+                <div class="flex items-center gap-2 header-actions">
                     <div id="headerOrderTracker" class="header-tracker-btn">
-                        <i class="fas fa-fire text-sm mr-1"></i> Track Order
+                        <span class="btn-label">Orders</span>
                     </div>
-                    <a href="login.html" class="theme-toggle-btn" title="Switch Staff Portal">
-                        <i class="fas fa-user-shield"></i>
+                    <a href="login.html" class="header-tracker-btn" style="text-decoration:none; background: rgba(255,255,255,0.1);" title="Switch Portal / Role">
+                        <i class="fas fa-exchange-alt text-xs mr-1"></i>
+                        <span class="btn-label">Role Switch</span>
                     </a>
                 </div>
             </div>
@@ -97,14 +91,11 @@
                     <!-- READY SECTION -->
                     <div class="ready-section" id="readySection">
                         <span class="ready-icon"><i class="fas fa-bell"></i></span>
-                        <div class="status-info">
-                            <span class="ready-text"><span class="highlight" id="readyCount">0</span> ready!</span>
-                        </div>
                         <div class="avatar-list" id="orderAvatars"></div>
                     </div>
                 </div>
 
-                <div id="menuGrid" class="grid grid-cols-2 gap-3"></div>
+                <div id="menuGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
             </div>
         </div>
 
@@ -144,7 +135,7 @@
         <div class="app-header" style="position:sticky; top:0; z-index:10;">
             <div class="top-row">
                 <div class="location" style="cursor:pointer;" id="backToMenuBtn">
-                    <i class="fas fa-arrow-left text-white"></i> <span style="color:#fff;">Order Tracker</span>
+                    <i class="fas fa-arrow-left"></i> <span>Order Tracker</span>
                 </div>
                 <div></div>
             </div>

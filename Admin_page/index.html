@@ -23,24 +23,19 @@
             <div class="topbar">
                 <div class="topbar-left">
                     <div class="logo"><i class="fas fa-fire"></i> Flame<span>Dine</span><span class="badge-version">ADMIN</span></div>
-                    <!-- Always-visible affordance hinting the page nav is tucked below -->
-                    <button class="subheader-peek" id="subheaderPeek" onclick="toggleSubheader()" aria-label="Show page navigation">
-                        <span>Menu</span><i class="fas fa-chevron-down"></i>
-                    </button>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;">
-                <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Theme">
-                    <i id="themeToggleIcon" class="fas fa-sun"></i>
-                </button>
-                <div class="user-menu" id="userMenu">
-                    <button class="user-avatar-btn" id="userAvatarBtn" onclick="toggleUserMenu()">RK</button>
-                    <div class="user-dropdown hidden" id="userDropdown">
-                        <div class="user-dropdown-info">
-                            <div class="user-dropdown-name" id="userDropdownName">Rajesh Kumar</div>
-                            <div class="user-dropdown-role" id="userDropdownRole">Admin &middot; The Grand Dine</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <a href="../login.html" class="btn btn-outline btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:600;color:#64748b;" title="Switch Role / Portal"><i class="fas fa-exchange-alt"></i> Switch Role</a>
+                    <div class="user-menu" id="userMenu">
+                        <button class="user-avatar-btn" id="userAvatarBtn" onclick="toggleUserMenu()">RK</button>
+                        <div class="user-dropdown hidden" id="userDropdown">
+                            <div class="user-dropdown-info">
+                                <div class="user-dropdown-name" id="userDropdownName">Rajesh Kumar</div>
+                                <div class="user-dropdown-role" id="userDropdownRole">Admin &middot; The Grand Dine</div>
+                            </div>
+                            <div class="user-dropdown-divider"></div>
+                            <button class="user-dropdown-item logout-item" onclick="handleLogout()"><i class="fas fa-exchange-alt"></i> Switch Role / Logout</button>
                         </div>
-                        <div class="user-dropdown-divider"></div>
-                        <button class="user-dropdown-item logout-item" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </div>
                 </div>
                 </div>
@@ -134,10 +129,10 @@
                 </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div class="grid-2col-even">
                 <div class="card">
                     <div class="card-title"><span><i class="fas fa-tachometer-alt" style="color:#8b5cf6;margin-right:6px;"></i> Performance Metrics</span></div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="metrics-mini-grid">
                         <div><div style="font-size:12px;color:#94a3b8;">Peak Hour Revenue</div><div style="font-size:20px;font-weight:700;">$187</div><div style="font-size:12px;color:#64748b;">12:30 PM - 1:30 PM</div></div>
                         <div><div style="font-size:12px;color:#94a3b8;">Busiest Station</div><div style="font-size:20px;font-weight:700;">Grill</div><div style="font-size:12px;color:#64748b;">18 orders today</div></div>
                         <div><div style="font-size:12px;color:#94a3b8;">Avg Order Value</div><div style="font-size:20px;font-weight:700;">$28.40</div><div style="font-size:12px;color:#64748b;">+$2.10 vs last week</div></div>
@@ -321,12 +316,22 @@
 
     </div>
 
+    <!-- ═══ MOBILE BOTTOM NAV (shown only on small screens; desktop uses the top subheader) ═══ -->
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+        <button class="nav-item" data-page="billing"><i class="fas fa-receipt"></i><span>Billing</span></button>
+        <button class="nav-item" data-page="menu"><i class="fas fa-utensils"></i><span>Menu</span></button>
+        <button class="nav-item" data-page="tables"><i class="fas fa-table"></i><span>Tables</span></button>
+        <button class="nav-item" data-page="staff"><i class="fas fa-users"></i><span>Staff</span></button>
+    </nav>
+
     <!-- ═══ MODAL OVERLAY ═══ -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal" id="modalContent"></div>
     </div>
 
     <script src="../scripts/store.js" defer></script>
+    <script src="../scripts/data.js" defer></script>
     <script src="scripts/admin.js" defer></script>
 </body>
 </html>
