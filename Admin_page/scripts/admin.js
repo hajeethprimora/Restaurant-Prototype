@@ -964,6 +964,8 @@ window.executeAssignRole = function () {
 // ─── INIT & STORE SUBSCRIPTION ──────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initUserMenu();
+    teaseSubheaderReveal();
+    window.FlameDineTheme.wireToggleButton('themeToggleBtn', 'themeToggleIcon');
     window.FlameDineStore.subscribe(event => {
         renderBillingFloor();
     });
