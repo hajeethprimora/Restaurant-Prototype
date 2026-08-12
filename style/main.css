@@ -672,7 +672,7 @@
         /* ============================================================ */
         .cart-bar {
             position: fixed;
-            bottom: 24px;
+            bottom: calc(48px + env(safe-area-inset-bottom, 0px));
             left: 16px;
             right: 16px;
             background: #1A1A1A;
@@ -1639,7 +1639,7 @@
         /* ============================================================ */
         .order-success-widget {
             position: fixed;
-            bottom: 24px;
+            bottom: calc(48px + env(safe-area-inset-bottom, 0px));
             left: 50%;
             transform: translateX(-50%) translateY(150%);
             width: calc(100% - 32px);
