@@ -12,19 +12,142 @@
         * { font-family: 'Inter', sans-serif; }
         body { background: #09090b; color: #f4f4f5; transition: background 0.2s ease, color 0.2s ease; }
         .server-header { background: #18181b; border-bottom: 1px solid #27272a; }
-        .table-tile {
-            background: #18181b;
-            border: 2px solid #27272a;
+        /* ─── ADMIN-STYLE 3D DINING TABLE FLOOR ─── */
+        .server-table-floor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            gap: 24px 16px;
+            padding: 12px 4px 20px;
+        }
+        .dining-table-wrap {
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+        .dining-table {
+            position: relative;
+            width: 80px;
+            height: 80px;
             border-radius: 16px;
+            background: #18181b;
+            border: 3px solid #27272a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
         }
-        .table-tile:hover { transform: translateY(-3px); border-color: #52525b; }
-        .pulse-green { animation: pulseGreen 1.5s infinite alternate; }
-        @keyframes pulseGreen {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-            100% { box-shadow: 0 0 15px 5px rgba(34, 197, 94, 0.2); }
+        .dining-table:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
+        .dining-table .chair {
+            position: absolute;
+            background: #27272a;
+            border-radius: 4px;
+            transition: all 0.25s ease;
+        }
+        .chair-top, .chair-bottom { width: 24px; height: 8px; left: 50%; transform: translateX(-50%); }
+        .chair-top { top: -11px; }
+        .chair-bottom { bottom: -11px; }
+        .chair-left, .chair-right { width: 8px; height: 24px; top: 50%; transform: translateY(-50%); }
+        .chair-left { left: -11px; }
+        .chair-right { right: -11px; }
+
+        .table-number {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }
+        .table-status-dot {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 14px;
+            height: 14px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #18181b;
+        }
+
+        /* Table Status Styles - Dark Mode Defaults */
+        .dining-table.status-empty { border-color: #27272a; background: #121215; }
+        .dining-table.status-empty .table-number { color: #52525b; }
+        .dining-table.status-empty .chair { background: #27272a; }
+
+        .dining-table.status-ready {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.14);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
+            animation: pulseGreenGlow 1.8s infinite alternate;
+        }
+        .dining-table.status-ready .table-number { color: #4ade80; }
+        .dining-table.status-ready .chair { background: #166534; }
+        .dining-table.status-ready .table-status-dot { background: #22c55e; }
+
+        .dining-table.status-preparing {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.14);
+        }
+        .dining-table.status-preparing .table-number { color: #fbbf24; }
+        .dining-table.status-preparing .chair { background: #78350f; }
+        .dining-table.status-preparing .table-status-dot { background: #f59e0b; }
+
+        .dining-table.status-open {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.14);
+        }
+        .dining-table.status-open .table-number { color: #60a5fa; }
+        .dining-table.status-open .chair { background: #1e3a8a; }
+        .dining-table.status-open .table-status-dot { background: #3b82f6; }
+
+        @keyframes pulseGreenGlow {
+            0% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
+            100% { box-shadow: 0 0 24px rgba(34, 197, 94, 0.45); }
+        }
+
+        /* Light Theme Overrides */
+        :root[data-theme="light"] .dining-table { background: #ffffff; border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        :root[data-theme="light"] .dining-table .chair { background: #cbd5e1; }
+        :root[data-theme="light"] .dining-table .table-number { color: #1e293b; }
+        :root[data-theme="light"] .dining-table .table-status-dot { border-color: #ffffff; }
+        :root[data-theme="light"] .dining-table.status-empty { background: #f8fafc; border-color: #e2e8f0; }
+        :root[data-theme="light"] .dining-table.status-empty .table-number { color: #94a3b8; }
+        :root[data-theme="light"] .dining-table.status-empty .chair { background: #e2e8f0; }
+        :root[data-theme="light"] .dining-table.status-ready { border-color: #22c55e; background: #f0fdf4; }
+        :root[data-theme="light"] .dining-table.status-ready .table-number { color: #15803d; }
+        :root[data-theme="light"] .dining-table.status-ready .chair { background: #86efac; }
+        :root[data-theme="light"] .dining-table.status-preparing { border-color: #f59e0b; background: #fffbeb; }
+        :root[data-theme="light"] .dining-table.status-preparing .table-number { color: #b45309; }
+        :root[data-theme="light"] .dining-table.status-preparing .chair { background: #fde68a; }
+        :root[data-theme="light"] .dining-table.status-open { border-color: #3b82f6; background: #eff6ff; }
+        :root[data-theme="light"] .dining-table.status-open .table-number { color: #1d4ed8; }
+        :root[data-theme="light"] .dining-table.status-open .chair { background: #93c5fd; }
+
+        /* ─── STATION BADGES (High contrast for Dark & Light Themes) ─── */
+        .station-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(39, 39, 42, 0.9);
+            color: #e4e4e7;
+            border: 1px solid #3f3f46;
+        }
+
+        :root[data-theme="light"] .station-badge {
+            background: #f1f5f9;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+
         .fade-in { animation: fadeInUp 0.25s ease; }
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(6px); }
@@ -226,17 +349,7 @@
         </div>
     </header>
 
-    <!-- METRICS BANNER -->
-    <div class="bg-zinc-950 border-b border-zinc-800/80 px-6 py-3">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-zinc-400">
-            <div class="flex items-center gap-6">
-                <div>Ready for Pickup: <span id="statReadyCount" class="font-black text-emerald-400 text-sm">0</span></div>
-                <div>Picked Up: <span id="statPickedCount" class="font-black text-blue-400 text-sm">0</span></div>
-                <div>Served Today: <span id="statServedCount" class="font-black text-zinc-300 text-sm">0</span></div>
-            </div>
-            <div class="text-zinc-500">Instant alert when Kitchen marks items ready</div>
-        </div>
-    </div>
+
 
     <!-- MAIN BODY -->
     <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
@@ -271,10 +384,9 @@
             <div id="tableViewSection">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
                     <span id="floorCountBadge" class="text-xs font-semibold text-zinc-500"></span>
-                    <div id="floorFilterChips" class="flex items-center gap-1.5 flex-wrap"></div>
                 </div>
-                <div id="tablesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    <!-- Table Tiles rendered dynamically -->
+                <div id="tablesGrid" class="server-table-floor-grid">
+                    <!-- 3D Dining Tables rendered dynamically -->
                 </div>
                 <div id="emptyTablesToggleWrap" class="hidden mt-4 text-center">
                     <button id="emptyTablesToggleBtn" onclick="toggleEmptyTables()" class="text-xs font-bold text-zinc-500 hover:text-zinc-300 transition px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700"></button>

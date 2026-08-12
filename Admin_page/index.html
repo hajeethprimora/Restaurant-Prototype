@@ -25,7 +25,7 @@
                     <div class="logo"><i class="fas fa-fire"></i> Flame<span>Dine</span><span class="badge-version">ADMIN</span></div>
                 </div>
                 <div style="display:flex;align-items:center;gap:12px;">
-                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Theme">
+                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Theme" onclick="window.FlameDineTheme && window.FlameDineTheme.toggle()">
                         <i id="themeToggleIcon" class="fas fa-sun"></i>
                     </button>
                     <a href="../login.html" class="btn btn-outline btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:600;color:#64748b;" title="Switch Role / Portal"><i class="fas fa-exchange-alt"></i> Switch Role</a>
@@ -56,10 +56,10 @@
         <!-- ========== DASHBOARD ========== -->
         <section id="page-dashboard" class="page active">
             <div class="page-header">
-                <div><h1>Dashboard</h1><div class="sub">Branch: The Grand Dine &middot; <span id="dateDisplay"></span></div></div>
+                <div><h1>Dashboard</h1><div class="sub">Branch: <span id="branchSubDisplay">The Grand Dine (Main)</span> &middot; <span id="dateDisplay"></span></div></div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-                    <div class="branch-selector" style="display:flex;align-items:center;gap:8px;background:#fff;padding:6px 14px 6px 16px;border-radius:10px;border:1px solid #e9edf4;font-size:14px;font-weight:500;cursor:pointer;" onclick="alert('Switch branch')">
-                        <span>🏢 The Grand Dine</span><i class="fas fa-chevron-down" style="color:#94a3b8;font-size:12px;"></i>
+                    <div class="branch-selector" style="display:flex;align-items:center;gap:8px;background:#fff;padding:6px 14px 6px 16px;border-radius:10px;border:1px solid #e9edf4;font-size:14px;font-weight:500;cursor:pointer;" onclick="openModal('branchModal')">
+                        <span id="branchSelectorText">🏢 The Grand Dine (Main)</span><i class="fas fa-chevron-down" style="color:#94a3b8;font-size:12px;"></i>
                     </div>
                     <button class="btn btn-outline btn-sm" onclick="alert('Refreshing data...')"><i class="fas fa-sync"></i> Refresh</button>
                     <button class="btn btn-primary btn-sm" onclick="alert('Download report')"><i class="fas fa-file-pdf"></i> Report</button>

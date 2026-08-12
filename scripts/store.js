@@ -309,10 +309,65 @@
 
         // --- READ APIS ---
 
-        getBranch() { return this.load().branch; }
+        getBranch() { return this.getCurrentBranch(); }
+        getBranches() {
+            const data = this.load();
+            if (!data.branches || data.branches.length === 0) {
+                data.branches = [
+                    { id: 'br_01', name: 'The Grand Dine (Main)', location: 'Downtown Hub' },
+                    { id: 'br_02', name: 'The Grand Dine (Airport)', location: 'Terminal 2' },
+                    { id: 'br_03', name: 'The Grand Dine (Mall)', location: 'City Center Mall' }
+                ];
+                if (!data.currentBranchId) data.currentBranchId = 'br_01';
+                this.save(data);
+            }
+            return data.branches;
+        }
+        getCurrentBranch() {
+            const data = this.load();
+            const branches = this.getBranches();
+            const curr = branches.find(b => b.id === (data.currentBranchId || 'br_01'));
+            return curr || branches[0] || { id: 'br_01', name: 'The Grand Dine (Main)' };
+        }
+        switchBranch(branchId) {
+            const data = this.load();
+            const branches = this.getBranches();
+            const target = branches.find(b => b.id === branchId);
+            if (!target) return { success: false, message: 'Branch not found' };
+
+            data.currentBranchId = branchId;
+            if (!data.branch) data.branch = {};
+            data.branch.id = target.id;
+            data.branch.name = target.name;
+            this.save(data);
+            this.broadcast({ type: 'BRANCH_SWITCHED', branch: target });
+            return { success: true, branch: target };
+        }
+        addBranch({ name, location }) {
+            const data = this.load();
+            const branches = this.getBranches();
+            const newBranch = {
+                id: 'br_' + Date.now(),
+                name: name.trim(),
+                location: location ? location.trim() : 'Main City',
+                createdAt: new Date().toISOString()
+            };
+            data.branches.push(newBranch);
+            data.currentBranchId = newBranch.id;
+            if (!data.branch) data.branch = {};
+            data.branch.id = newBranch.id;
+            data.branch.name = newBranch.name;
+            this.save(data);
+            this.broadcast({ type: 'BRANCH_ADDED', branch: newBranch });
+            return { success: true, branch: newBranch };
+        }
         getStations() { return this.load().stations; }
         getCategories() { return this.load().categories; }
-        getMenuItems() { return this.load().menuItems; }
+        getMenuItems(includeDeleted = false) {
+            const items = this.load().menuItems || [];
+            if (includeDeleted) return items;
+            return items.filter(m => !m.isDeleted);
+        }
         getTables() { return this.load().tables; }
         getStaffUsers() { return this.load().staffUsers; }
 
@@ -651,9 +706,24 @@
 
         deleteMenuItem(itemId) {
             const data = this.load();
-            data.menuItems = data.menuItems.filter(m => m.id !== parseInt(itemId));
-            this.save(data);
-            this.broadcast({ type: 'MENU_UPDATED' });
+            const item = data.menuItems.find(m => m.id === parseInt(itemId));
+            if (item) {
+                item.isDeleted = true;
+                item.available = false;
+                this.save(data);
+                this.broadcast({ type: 'MENU_UPDATED' });
+            }
+        }
+
+        recoverMenuItem(itemId) {
+            const data = this.load();
+            const item = data.menuItems.find(m => m.id === parseInt(itemId));
+            if (item) {
+                item.isDeleted = false;
+                item.available = true;
+                this.save(data);
+                this.broadcast({ type: 'MENU_UPDATED' });
+            }
         }
 
         // Category Management
