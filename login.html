@@ -140,6 +140,26 @@
             color: #ea580c;
         }
         :root[data-theme="light"] .theme-toggle-btn:hover { background: rgba(0, 0, 0, 0.1); }
+
+        /* Colored text reads fine at -300/-400 against the dark card it was
+           designed for, but washes out against the lighter card in light mode. */
+        :root[data-theme="light"] .text-purple-300,
+        :root[data-theme="light"] .text-purple-400 { color: #7e22ce !important; }
+        :root[data-theme="light"] .text-orange-300,
+        :root[data-theme="light"] .text-orange-400 { color: #c2410c !important; }
+        :root[data-theme="light"] .text-emerald-300,
+        :root[data-theme="light"] .text-emerald-400 { color: #047857 !important; }
+        :root[data-theme="light"] .text-blue-300,
+        :root[data-theme="light"] .text-blue-400 { color: #1d4ed8 !important; }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .login-card { padding: 28px 18px; border-radius: 22px; }
+            .brand-icon { width: 60px; height: 60px; font-size: 28px; border-radius: 18px; }
+            .preset-btn { padding: 10px 12px; }
+            .preset-btn .w-10 { width: 34px; height: 34px; font-size: 15px; flex-shrink: 0; }
+        }
     </style>
 </head>
 <body>
