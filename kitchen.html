@@ -138,10 +138,19 @@
         .urgency-tag.urgent { background: rgba(249, 115, 22, 0.18); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); }
         .urgency-tag.critical { background: rgba(239, 68, 68, 0.22); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.45); }
 
-        #urgencyAlertBanner {
-            background: linear-gradient(90deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.08));
-            border: 1px solid rgba(239, 68, 68, 0.4);
+        .urgency-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #ef4444;
         }
+        .urgency-banner-icon { color: #f87171; font-size: 15px; flex-shrink: 0; }
+        .urgency-banner-text { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .urgency-banner-title { font-weight: 800; font-size: 13px; color: #fca5a5; }
+        .urgency-banner-body { font-size: 12px; color: #fca5a5; opacity: 0.8; }
 
         /* ─── LIGHT THEME ─── */
         :root[data-theme="light"] body { background: #f4f4f6; color: #18181b; }
@@ -174,6 +183,49 @@
         :root[data-theme="light"] .kanban-card .text-zinc-400 { color: #71717a !important; }
         :root[data-theme="light"] .kanban-card .bg-zinc-800 { background: #f1f5f9 !important; color: #3f3f46 !important; }
         :root[data-theme="light"] #emptyQueueState { background: #fff !important; border-color: #e4e4e7 !important; }
+
+        /* Colored text reads fine at -400 against the dark cards/bars it was
+           designed for, but washes out against light backgrounds — darken it. */
+        :root[data-theme="light"] .text-blue-400 { color: #1d4ed8 !important; }
+        :root[data-theme="light"] .text-amber-400 { color: #b45309 !important; }
+        :root[data-theme="light"] .text-orange-400,
+        :root[data-theme="light"] .text-orange-500 { color: #c2410c !important; }
+        :root[data-theme="light"] .text-emerald-400 { color: #047857 !important; }
+        :root[data-theme="light"] .text-red-400 { color: #dc2626 !important; }
+        :root[data-theme="light"] .text-amber-300,
+        :root[data-theme="light"] .text-amber-300\/90 { color: #92400e !important; }
+
+        :root[data-theme="light"] .urgency-tag.relaxed,
+        :root[data-theme="light"] .live-timer-wrap.relaxed { color: #047857 !important; background: rgba(16, 185, 129, 0.12) !important; }
+        :root[data-theme="light"] .urgency-tag.medium,
+        :root[data-theme="light"] .live-timer-wrap.medium { color: #b45309 !important; background: rgba(245, 158, 11, 0.12) !important; }
+        :root[data-theme="light"] .urgency-tag.urgent,
+        :root[data-theme="light"] .live-timer-wrap.urgent { color: #c2410c !important; background: rgba(249, 115, 22, 0.14) !important; }
+        :root[data-theme="light"] .urgency-tag.critical,
+        :root[data-theme="light"] .live-timer-wrap.critical { color: #dc2626 !important; background: rgba(239, 68, 68, 0.16) !important; }
+
+        :root[data-theme="light"] .urgency-banner { background: rgba(239, 68, 68, 0.07); }
+        :root[data-theme="light"] .urgency-banner-icon { color: #dc2626; }
+        :root[data-theme="light"] .urgency-banner-title,
+        :root[data-theme="light"] .urgency-banner-body { color: #b91c1c !important; }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 1024px) {
+            .kanban-board { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+        }
+        @media (max-width: 768px) {
+            main { padding: 16px; }
+            .kds-header { padding: 12px 16px; gap: 10px; }
+            .kds-header h1 { font-size: 16px; }
+            .kanban-board { grid-template-columns: 1fr; gap: 14px; }
+            .kanban-column { padding: 10px; }
+        }
+        @media (max-width: 480px) {
+            main { padding: 12px; }
+            .brand-icon-chip { display: none; }
+            .kanban-card { padding: 12px; }
+            .urgency-banner { padding: 10px 12px; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -181,7 +233,7 @@
     <!-- HEADER -->
     <header class="kds-header sticky top-0 z-40 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-orange-600/20 text-orange-500 flex items-center justify-center font-bold text-xl border border-orange-500/30">
+            <div class="brand-icon-chip w-10 h-10 rounded-xl bg-orange-600/20 text-orange-500 flex items-center justify-center font-bold text-xl border border-orange-500/30">
                 <i class="fas fa-fire"></i>
             </div>
             <div>
@@ -247,13 +299,11 @@
         </div>
 
         <!-- Serving Urgency Alert Banner -->
-        <div id="urgencyAlertBanner" class="hidden mb-6 p-4 rounded-2xl text-white flex items-center justify-between gap-3 flex-wrap">
-            <div class="flex items-center gap-3">
-                <i class="fas fa-triangle-exclamation text-2xl text-red-400"></i>
-                <div>
-                    <div class="font-bold text-sm text-red-100" id="urgencyBannerTitle">Orders running late</div>
-                    <div class="text-xs text-red-200/80" id="urgencyBannerBody">Prioritize these before customers get frustrated.</div>
-                </div>
+        <div id="urgencyAlertBanner" class="hidden mb-6 urgency-banner">
+            <i class="fas fa-triangle-exclamation urgency-banner-icon"></i>
+            <div class="urgency-banner-text">
+                <span class="urgency-banner-title" id="urgencyBannerTitle">Orders running late</span>
+                <span class="urgency-banner-body" id="urgencyBannerBody">Prioritize these before customers get frustrated.</span>
             </div>
         </div>
 

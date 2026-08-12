@@ -141,8 +141,20 @@
         :root[data-theme="light"] .kanban-card { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         :root[data-theme="light"] .table-tile .text-white,
         :root[data-theme="light"] .kanban-card .text-white { color: #18181b !important; }
+        :root[data-theme="light"] .kanban-card .bg-zinc-800 { background: #f1f5f9 !important; color: #3f3f46 !important; }
         :root[data-theme="light"] .kanban-column { background: #fafafa; border-color: #e4e4e7; }
         :root[data-theme="light"] .kanban-column-header { border-color: #ececee; }
+
+        /* Colored text reads fine at -400 against the dark cards/bars it was
+           designed for, but washes out against light backgrounds — darken it. */
+        :root[data-theme="light"] .text-blue-400 { color: #1d4ed8 !important; }
+        :root[data-theme="light"] .text-amber-400 { color: #b45309 !important; }
+        :root[data-theme="light"] .text-orange-400 { color: #c2410c !important; }
+        :root[data-theme="light"] .text-emerald-400 { color: #047857 !important; }
+        :root[data-theme="light"] .text-amber-300,
+        :root[data-theme="light"] .text-amber-300\/90 { color: #92400e !important; }
+        :root[data-theme="light"] .text-amber-200\/80 { color: #92400e !important; }
+        :root[data-theme="light"] .bg-amber-500\/10 { background: rgba(245, 158, 11, 0.12) !important; }
         :root[data-theme="light"] .filter-chip,
         :root[data-theme="light"] .view-tab:not(.active) { background: #fff; border-color: #e4e4e7; color: #52525b; }
         :root[data-theme="light"] input { background: #fff !important; color: #18181b !important; }
@@ -153,6 +165,25 @@
         :root[data-theme="light"] #tableSelectorModal > div { background: #fff !important; }
         :root[data-theme="light"] #tableSelectorModal .text-white { color: #18181b !important; }
         :root[data-theme="light"] .table-selector-chip:not(.active) { background: #fff; border-color: #e4e4e7; color: #52525b; }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 1024px) {
+            .kanban-board { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+        }
+        @media (max-width: 768px) {
+            main { padding: 16px; }
+            .server-header { padding: 12px 16px; gap: 10px; }
+            .server-header h1 { font-size: 16px; }
+            .kanban-board { grid-template-columns: 1fr; gap: 14px; }
+            .kanban-column { padding: 10px; }
+            #tableSelectorGrid { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 480px) {
+            main { padding: 12px; }
+            .brand-icon-chip { display: none; }
+            .kanban-card { padding: 12px; }
+            #tableDrawer > div { max-width: 100%; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -160,7 +191,7 @@
     <!-- HEADER -->
     <header class="server-header sticky top-0 z-40 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-500 flex items-center justify-center font-bold text-xl border border-emerald-500/30">
+            <div class="brand-icon-chip w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-500 flex items-center justify-center font-bold text-xl border border-emerald-500/30">
                 <i class="fas fa-concierge-bell"></i>
             </div>
             <div>
