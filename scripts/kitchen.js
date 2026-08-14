@@ -104,6 +104,12 @@
         setInterval(tickTimers, 1000);
     }
 
+    const STATUS_TAGS = {
+        placed: `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase">NEW</span>`,
+        claimed: `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">CLAIMED</span>`,
+        preparing: `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 uppercase">PREPARING</span>`
+    };
+
     function renderStationTabs() {
         const stations = window.FlameDineStore.getStations();
         const tabList = [{ id: 'All', name: 'All Stations' }, ...stations];
@@ -146,12 +152,11 @@
                             <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold">${item.station}</span>
                         </div>
                     </div>
-                    ${statusBadgeHtml}
+                    ${STATUS_TAGS[item.status] || ''}
                 </div>
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                     ${timerHtml}
                 </div>
-                ${item.note ? `<div class="text-[11px] text-amber-300/90 font-medium italic mt-1"><i class="fas fa-comment-dots mr-1"></i>"${item.note}"</div>` : ''}
                 ${actionBtnHtml}
             </div>
         `;

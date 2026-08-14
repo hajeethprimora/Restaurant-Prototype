@@ -1236,15 +1236,19 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .billing-view-tab:hover { background: #f8fafc; }
 .billing-view-tab.active { background: #E53935; border-color: #E53935; color: #fff; }
 
-/* ─── BILLING: DISH VIEW (4-column kanban) ─── */
+/* ─── BILLING: DISH VIEW (4-column kanban, horizontally scrollable) ─── */
 .dish-kanban-board {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    display: flex;
     gap: 16px;
     align-items: start;
     padding: 4px 4px 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
 }
 .dish-kanban-column {
+    flex: 0 0 250px;
+    scroll-snap-align: start;
     background: #f8fafc;
     border: 1px solid #e9edf4;
     border-radius: 14px;
@@ -1528,7 +1532,7 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
     .billing-history-header .actions .btn-primary { flex: 1; justify-content: center; }
 
     .billing-view-tab { flex: 1; justify-content: center; padding: 8px 10px; font-size: 12px; }
-    .dish-kanban-board { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .dish-kanban-column { flex: 0 0 210px; }
     .table-floor-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 28px 16px; }
     .dining-table { width: 80px; height: 80px; }
     .table-number { font-size: 19px; }

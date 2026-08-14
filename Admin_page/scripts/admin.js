@@ -761,7 +761,11 @@ function renderMenuTopGrid(container) {
                 <button class="view-toggle-btn ${menuViewMode === 'all' ? 'active' : ''}" onclick="switchMenuView('all')"><i class="fas fa-border-all"></i> All Items</button>
                 <button class="view-toggle-btn ${menuViewMode === 'category' ? 'active' : ''}" onclick="switchMenuView('category')"><i class="fas fa-layer-group"></i> By Category</button>
                 <button class="view-toggle-btn ${menuViewMode === 'station' ? 'active' : ''}" onclick="switchMenuView('station')"><i class="fas fa-fire-burner"></i> By Station</button>
-            <    if (menuViewMode === 'category') html += renderCategoryCardsHtml();
+            </div>
+        </div>
+    `;
+
+    if (menuViewMode === 'category') html += renderCategoryCardsHtml();
     else if (menuViewMode === 'station') html += renderStationCardsHtml();
     else html += renderMenuItemsHtml(window.FlameDineStore.getMenuItems(true), 'all');
 
@@ -780,21 +784,6 @@ function renderCategoryCardsHtml() {
             <div class="card-item menu-category-card" onclick="openMenuCategory('${cat.replace(/'/g, "\\'")}')">
                 <div class="card-header">
                     <h4><i class="fas ${categoryIcon(cat)}" style="font-size:19px;color:#E53935;width:22px;"></i> ${cat}</h4>
-                    <i class="fas fa-chevron-right" style="color:#cbd5e1;"></i>
-                </div>
-                <div class="card-body">${catItems.length} item${catItems.length === 1 ? '' : 's'} &middot; ${activeCount} active</div>
-            </div>
-        `;
-    });
-    html += `
-            <div class="card-empty" onclick="openModal('addCategory')"><i class="fas fa-plus-circle"></i><span>Add New Category</span></div>
-        </div>
-    `;
-    return html;
-}
-
-function renderStationCardsHtml() {
-    const items = window.FlameDineStore.getMenuItems(true);cat}</h4>
                     <i class="fas fa-chevron-right" style="color:#cbd5e1;"></i>
                 </div>
                 <div class="card-body">${catItems.length} item${catItems.length === 1 ? '' : 's'} &middot; ${activeCount} active</div>

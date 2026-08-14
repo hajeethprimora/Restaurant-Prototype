@@ -297,7 +297,12 @@
             main { padding: 16px; }
             .server-header { padding: 12px 16px; gap: 10px; }
             .server-header h1 { font-size: 16px; }
-            .kanban-board { grid-template-columns: 1fr; gap: 14px; }
+
+            .my-tables-row { gap: 8px; }
+            .my-tables-label { flex-basis: 100%; margin-right: 0; }
+            .my-tables-row .view-tab { flex: 1; text-align: center; padding: 10px 8px; font-size: 12px; }
+
+            .kanban-board { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .kanban-column { padding: 10px; }
             #tableSelectorGrid { grid-template-columns: repeat(4, 1fr); }
         }
@@ -356,8 +361,8 @@
 
         <!-- MY TABLES (which tables this login is covering — a single shared
              login is used by several servers, so each picks their own set) -->
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mr-1">My Tables:</span>
+        <div class="flex flex-wrap items-center gap-2 my-tables-row">
+            <span class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mr-1 my-tables-label">My Tables:</span>
             <button id="allTablesBtn" class="view-tab active" onclick="setTableFilterMode('all')"><i class="fas fa-border-all mr-1.5"></i>All Tables</button>
             <button id="selectTablesBtn" class="view-tab" onclick="openTableSelector()"><i class="fas fa-check-square mr-1.5"></i>Select Tables</button>
         </div>

@@ -353,7 +353,6 @@
                         </div>
                     </div>
                 </div>
-                ${item.note ? `<div class="text-xs text-amber-300/90 font-medium italic mb-2 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20"><i class="fas fa-comment-dots mr-1 text-amber-400"></i>"${item.note}"</div>` : ''}
                 ${actionBtnHtml}
             </div>
         `;

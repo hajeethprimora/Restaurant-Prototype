@@ -61,6 +61,7 @@
         const itemSheetImg = $('itemSheetImg');
         const itemSheetQty = $('itemSheetQty');
         const headerOrderTracker = $('headerOrderTracker');
+        const preparingToastEl = $('preparingToast');
 
         // Buttons
         const scanBtn = $('scanButton');
@@ -722,8 +723,8 @@
         // =============================================================
         searchInput.addEventListener('input', filterItems);
 
-        headerOrderTracker.addEventListener('click', () => {
-            const session = window.FlameDineStore.getOpenSessionForTable(5);
+        function goToOrderTracker() {
+            const session = hasPlacedOrderThisSession() ? window.FlameDineStore.getOpenSessionForTable(5) : null;
             if (session) {
                 const order = window.FlameDineStore.getOrderForSession(session.id);
                 const items = window.FlameDineStore.getOrderItemsForSession(session.id);
@@ -748,7 +749,9 @@
                     setTimeout(() => notification.remove(), 500);
                 }, 2500);
             }
-        });
+        }
+        headerOrderTracker.addEventListener('click', goToOrderTracker);
+        if (preparingToastEl) preparingToastEl.addEventListener('click', goToOrderTracker);
 
         successTrackBtn.addEventListener('click', () => {
             clearAutoTrackTimer();
