@@ -1210,6 +1210,91 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .floor-legend .legend-item { display: flex; align-items: center; gap: 6px; }
 .floor-legend .dot { width: 10px; height: 10px; border-radius: 50%; }
 
+.hidden { display: none !important; }
+.empty-state { text-align: center; padding: 40px 12px; color: #94a3b8; font-size: 14px; }
+
+/* ─── BILLING: TABLE VIEW / DISH VIEW TABS ─── */
+.billing-view-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.billing-view-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.billing-view-tab:hover { background: #f8fafc; }
+.billing-view-tab.active { background: #E53935; border-color: #E53935; color: #fff; }
+
+/* ─── BILLING: DISH VIEW (4-column kanban) ─── */
+.dish-kanban-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px;
+    align-items: start;
+    padding: 4px 4px 24px;
+}
+.dish-kanban-column {
+    background: #f8fafc;
+    border: 1px solid #e9edf4;
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.dish-kanban-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 2px 4px 6px;
+}
+.dish-kanban-count {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+.dish-kanban-empty-col { font-size: 12px; color: #94a3b8; text-align: center; padding: 14px 4px; }
+.dish-kanban-card {
+    background: #fff;
+    border: 1px solid #e9edf4;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.dish-kanban-card .dk-name { font-weight: 700; font-size: 13px; color: #18181b; }
+.dish-kanban-card .dk-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 4px;
+}
+.dish-kanban-card .dk-meta span { background: #f1f5f9; padding: 2px 6px; border-radius: 6px; font-weight: 600; }
+
+:root[data-theme="dark"] .billing-view-tab { background: #18181b; border-color: #27272a; color: #a1a1aa; }
+:root[data-theme="dark"] .billing-view-tab:hover { background: #1f1f23; }
+:root[data-theme="dark"] .billing-view-tab.active { background: #E53935; border-color: #E53935; color: #fff; }
+:root[data-theme="dark"] .dish-kanban-column { background: #0f0f11; border-color: #27272a; }
+:root[data-theme="dark"] .dish-kanban-card { background: #18181b; border-color: #27272a; }
+:root[data-theme="dark"] .dish-kanban-card .dk-name { color: #e4e4e7; }
+:root[data-theme="dark"] .dish-kanban-card .dk-meta span { background: #27272a; color: #d4d4d8; }
+
 .table-floor-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -1442,6 +1527,8 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
     .billing-history-header .actions .layout-toggle { flex: 1; }
     .billing-history-header .actions .btn-primary { flex: 1; justify-content: center; }
 
+    .billing-view-tab { flex: 1; justify-content: center; padding: 8px 10px; font-size: 12px; }
+    .dish-kanban-board { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
     .table-floor-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 28px 16px; }
     .dining-table { width: 80px; height: 80px; }
     .table-number { font-size: 19px; }

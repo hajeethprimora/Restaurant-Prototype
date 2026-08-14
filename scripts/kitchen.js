@@ -146,6 +146,9 @@
                             <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold">${item.station}</span>
                         </div>
                     </div>
+                    ${statusBadgeHtml}
+                </div>
+                <div class="flex items-center justify-between gap-2 flex-wrap">
                     ${timerHtml}
                 </div>
                 ${item.note ? `<div class="text-[11px] text-amber-300/90 font-medium italic mt-1"><i class="fas fa-comment-dots mr-1"></i>"${item.note}"</div>` : ''}

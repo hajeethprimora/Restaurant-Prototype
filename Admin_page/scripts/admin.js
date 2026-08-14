@@ -19,7 +19,7 @@ function navigateTo(pageId) {
     if (pages[pageId]) pages[pageId].classList.add('active');
     navItems.forEach(item => { item.classList.toggle('active', item.dataset.page === pageId); });
     closeModal();
-    if (pageId === 'billing') renderBillingFloor();
+    if (pageId === 'billing') setBillingView(currentBillingView);
     if (pageId === 'menu') { currentMenuCategory = null; currentMenuStation = null; renderAdminMenu(); }
     if (pageId === 'tables') renderAdminTables();
     if (pageId === 'staff') renderAdminStaff();
@@ -491,6 +491,69 @@ function renderBillingFloor() {
         `;
     }).join('');
 }
+
+let currentBillingView = 'table';
+
+function setBillingView(view) {
+    currentBillingView = view;
+    document.querySelectorAll('.billing-view-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.billingView === view);
+    });
+    const tableViewEl = document.getElementById('billingTableView');
+    const dishViewEl = document.getElementById('billingDishView');
+    if (tableViewEl) tableViewEl.classList.toggle('hidden', view !== 'table');
+    if (dishViewEl) dishViewEl.classList.toggle('hidden', view !== 'dish');
+    if (view === 'table') renderBillingFloor();
+    else renderBillingDishKanban();
+}
+window.setBillingView = setBillingView;
+
+function dishKanbanCardHtml(item) {
+    return `
+        <div class="dish-kanban-card">
+            <div class="dk-name">${item.name} <span style="color:#E53935;">×${item.qty}</span></div>
+            <div class="dk-meta">
+                <span>T${item.tableNumber}</span>
+                <span>${item.station || ''}</span>
+                <span>Rnd ${item.round_no || 1}</span>
+            </div>
+        </div>
+    `;
+}
+
+function renderBillingDishKanban() {
+    const board = document.getElementById('billingDishKanbanBoard');
+    if (!board) return;
+    const allItems = (window.FlameDineStore.load().orderItems || []).filter(i => i.status !== 'cancelled');
+
+    const preparingItems = allItems.filter(i => ['placed', 'claimed', 'preparing'].includes(i.status));
+    const readyItems = allItems.filter(i => i.status === 'ready');
+    const pickedUpItems = allItems.filter(i => i.status === 'picked_up');
+    const servedItems = allItems.filter(i => i.status === 'served');
+
+    const total = preparingItems.length + readyItems.length + pickedUpItems.length + servedItems.length;
+    const emptyEl = document.getElementById('billingDishKanbanEmpty');
+    if (emptyEl) emptyEl.classList.toggle('hidden', total > 0);
+    if (total === 0) { board.innerHTML = ''; return; }
+
+    const columns = [
+        { title: 'Preparing', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', items: preparingItems },
+        { title: 'Ready', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', items: readyItems },
+        { title: 'Picked Up', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', items: pickedUpItems },
+        { title: 'Served', color: '#22c55e', bg: 'rgba(34,197,94,0.12)', items: servedItems },
+    ];
+
+    board.innerHTML = columns.map(col => `
+        <div class="dish-kanban-column">
+            <div class="dish-kanban-column-header">
+                <span>${col.title}</span>
+                <span class="dish-kanban-count" style="color:${col.color}; background:${col.bg};">${col.items.length}</span>
+            </div>
+            ${col.items.length === 0 ? `<div class="dish-kanban-empty-col">Nothing here</div>` : col.items.map(dishKanbanCardHtml).join('')}
+        </div>
+    `).join('');
+}
+window.renderBillingDishKanban = renderBillingDishKanban;
 
 function statusBadgeClass(status) {
     if (status === 'ready') return 'badge-yellow';
@@ -1169,7 +1232,6 @@ window.executeAddBranch = function () {
 // ─── INIT & STORE SUBSCRIPTION ──────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initUserMenu();
-    teaseSubheaderReveal();
     window.FlameDineTheme.wireToggleButton('themeToggleBtn', 'themeToggleIcon');
     updateBranchHeaderUI();
 
@@ -1177,7 +1239,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.type === 'BRANCH_SWITCHED' || event.type === 'BRANCH_ADDED') {
             updateBranchHeaderUI();
         }
-        renderBillingFloor();
+        if (currentBillingView === 'dish') renderBillingDishKanban();
+        else renderBillingFloor();
     });
     renderBillingFloor();
 });
