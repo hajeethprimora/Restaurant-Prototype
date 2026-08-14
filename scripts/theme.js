@@ -14,6 +14,9 @@
 
     function apply(theme) {
         document.documentElement.setAttribute('data-theme', theme);
+        if (document.body) {
+            document.body.setAttribute('data-theme', theme);
+        }
     }
 
     function set(theme) {
@@ -23,7 +26,8 @@
     }
 
     function toggle() {
-        const next = get() === 'dark' ? 'light' : 'dark';
+        const current = get();
+        const next = current === 'dark' ? 'light' : 'dark';
         set(next);
         return next;
     }
@@ -31,25 +35,33 @@
     // Apply immediately so there is no flash of the wrong theme.
     apply(get());
 
+    window.addEventListener('DOMContentLoaded', () => {
+        apply(get());
+    });
+
     // Sync across tabs (e.g. toggled on Kitchen, Server tab picks it up).
     window.addEventListener('storage', (e) => {
         if (e.key === KEY && e.newValue) apply(e.newValue);
     });
 
     // Wires a <button><i id="{iconId}"></i></button> to reflect/toggle the theme.
-    // Call after the button exists in the DOM (e.g. on DOMContentLoaded).
     function wireToggleButton(buttonId, iconId) {
         const btn = document.getElementById(buttonId);
         const icon = document.getElementById(iconId);
-        if (!btn || !icon) return;
+        if (!btn) return;
         const paint = () => {
-            icon.className = get() === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            const current = get();
+            if (icon) {
+                icon.className = current === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+            btn.setAttribute('title', current === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme');
         };
         paint();
-        btn.addEventListener('click', () => {
+        btn.onclick = (e) => {
+            if (e) e.preventDefault();
             toggle();
             paint();
-        });
+        };
         window.addEventListener('flamedine-theme-changed', paint);
     }
 

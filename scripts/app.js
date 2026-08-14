@@ -234,6 +234,22 @@
 
         function filterItems() { renderMenu(); }
 
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const clearBtn = document.getElementById('searchClearBtn');
+                if (clearBtn) clearBtn.classList.toggle('hidden', !this.value.trim());
+                filterItems();
+            });
+        }
+        window.clearSearchInput = function() {
+            if (searchInput) {
+                searchInput.value = '';
+                const clearBtn = document.getElementById('searchClearBtn');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                filterItems();
+            }
+        };
+
         // =============================================================
         // ITEM SHEET
         // =============================================================
@@ -584,36 +600,69 @@
             claimed: { label: 'Claimed', className: 'status-claimed' },
             preparing: { label: 'Preparing', className: 'status-preparing' },
             ready: { label: 'Ready', className: 'status-ready' },
-            served: { label: 'Served', className: 'status-served' }
+            served: { label: 'Served', className: 'status-served' },
+            cancelled: { label: 'Cancelled', className: 'status-cancelled' }
+        };
+
+        window.cancelCustomerItem = function(itemId, itemName) {
+            if (confirm(`Are you sure you want to cancel "${itemName}"?`)) {
+                const res = window.FlameDineStore.updateOrderItemStatus(itemId, 'cancelled');
+                if (res.success) {
+                    const session = window.FlameDineStore.getOpenSessionForTable(5);
+                    if (session) {
+                        const order = window.FlameDineStore.getOrderForSession(session.id);
+                        const items = window.FlameDineStore.getOrderItemsForSession(session.id);
+                        const activeTotal = items.reduce((s, i) => i.status !== 'cancelled' ? s + i.price * i.qty : s, 0);
+                        currentOrder = { id: order ? order.orderCode : 'FL-1042', items, total: activeTotal };
+                        renderTracker(currentOrder.id, currentOrder.total);
+                    }
+                } else {
+                    alert(res.message || 'Cannot cancel item at this stage.');
+                }
+            }
         };
 
         function renderTracker(orderId, total) {
             const trackTotal = $('trackTotal');
             const trackItems = $('trackItems');
 
-            trackTotal.textContent = total;
+            const activeItems = (currentOrder?.items || []).filter(i => i.status !== 'cancelled');
+            const calculatedTotal = activeItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+            trackTotal.textContent = calculatedTotal;
 
-            const sortedItems = [...currentOrder.items].sort((a, b) => {
-                const order = { placed: 0, claimed: 1, preparing: 2, ready: 3, served: 4 };
+            const sortedItems = [...(currentOrder?.items || [])].sort((a, b) => {
+                const order = { placed: 0, claimed: 1, preparing: 2, ready: 3, served: 4, cancelled: 5 };
                 return (order[a.status] || 0) - (order[b.status] || 0);
             });
 
             trackItems.innerHTML = sortedItems.map(item => {
                 const imgUrl = getLocalImagePath(item);
                 const meta = itemStatusMeta[item.status] || itemStatusMeta.placed;
+                const isCancellable = item.status === 'placed' || item.status === 'claimed';
+                const isCancelled = item.status === 'cancelled';
+
+                const cancelBtnHtml = isCancellable ? `
+                    <button onclick="window.cancelCustomerItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')" class="text-[11px] font-semibold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2 py-0.5 rounded transition ml-1.5" title="Cancel before preparation starts">
+                        <i class="fas fa-times mr-1"></i>Cancel
+                    </button>
+                ` : '';
+
                 return `
-                    <div class="flex justify-between items-center py-2 border-b border-[#f0edeb] last:border-0">
+                    <div class="flex justify-between items-center py-2.5 border-b border-[#f0edeb] last:border-0 ${isCancelled ? 'opacity-60' : ''}">
                         <div class="flex items-center gap-3">
                             <div class="tracker-summary-img-wrap">
                                 <img src="${imgUrl}" onerror="if (this.src.indexOf('unsplash.com') === -1) { this.src = getDishFallbackImage('${item.name.replace(/'/g, "\\'")}'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }" />
                                 <div class="fallback-emoji" style="display:none;">${item.emoji}</div>
                             </div>
                             <div>
-                                <span class="font-medium block" style="color:#1A1A1A;">${item.name} × ${item.qty}</span>
-                                <span class="item-status-badge ${meta.className}">${meta.label}</span>
+                                <span class="font-medium block ${isCancelled ? 'line-through text-zinc-400' : ''}" style="color:${isCancelled ? '#999' : '#1A1A1A'};">${item.name} × ${item.qty}</span>
+                                <div class="flex items-center gap-1 mt-0.5">
+                                    <span class="item-status-badge ${meta.className}">${meta.label}</span>
+                                    ${cancelBtnHtml}
+                                </div>
                             </div>
                         </div>
-                        <span class="font-bold" style="color:#1A1A1A;">₹${item.price * item.qty}</span>
+                        <span class="font-bold ${isCancelled ? 'line-through text-zinc-400' : ''}" style="color:${isCancelled ? '#999' : '#1A1A1A'};">₹${item.price * item.qty}</span>
                     </div>
                 `;
             }).join('');

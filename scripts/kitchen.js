@@ -50,17 +50,7 @@
     const kitchenToastEl = document.getElementById('kitchenToast');
     const toastTitleEl = document.getElementById('toastTitle');
     const toastBodyEl = document.getElementById('toastBody');
-    const urgencyAlertBannerEl = document.getElementById('urgencyAlertBanner');
-    const urgencyBannerTitleEl = document.getElementById('urgencyBannerTitle');
-    const urgencyBannerBodyEl = document.getElementById('urgencyBannerBody');
-
     // Stat Elements
-    const statPendingEl = document.getElementById('statPending');
-    const statClaimedEl = document.getElementById('statClaimed');
-    const statPreparingEl = document.getElementById('statPreparing');
-    const statReadyEl = document.getElementById('statReady');
-    const statCriticalEl = document.getElementById('statCritical');
-
     // Audio Chime Generator using Web Audio API (no external sound file needed)
     function playChime() {
         if (!soundEnabled) return;
@@ -103,6 +93,8 @@
             if (event.type === 'NEW_ORDER_PLACED') {
                 showToast('New Order Received!', `Table ${event.tableNumber} placed ${event.itemsCount} item(s).`);
                 playChime();
+            } else if (event.type === 'ITEM_STATUS_CHANGED' && event.status === 'cancelled') {
+                showToast('Item Cancelled', `${event.item?.name || 'An item'} for Table ${event.item?.tableNumber || ''} was cancelled.`);
             }
             renderKanban();
         });
@@ -131,78 +123,35 @@
         });
     }
 
-    function refreshStatsAndBanner() {
-        const allItems = window.FlameDineStore.load().orderItems || [];
-        const pendingCount = allItems.filter(i => i.status === 'placed').length;
-        const claimedCount = allItems.filter(i => i.status === 'claimed').length;
-        const preparingCount = allItems.filter(i => i.status === 'preparing').length;
-        const readyCount = allItems.filter(i => i.status === 'ready').length;
-
-        // Running-late count spans the whole kitchen, not just the currently filtered station
-        const allQueueItems = window.FlameDineStore.getKitchenQueue('All');
-        const lateItems = allQueueItems.filter(i => {
-            const level = getUrgency(elapsedMinutesSince(i.createdAt)).level;
-            return level === 'urgent' || level === 'critical';
-        });
-
-        if (statPendingEl) statPendingEl.textContent = pendingCount;
-        if (statClaimedEl) statClaimedEl.textContent = claimedCount;
-        if (statPreparingEl) statPreparingEl.textContent = preparingCount;
-        if (statReadyEl) statReadyEl.textContent = readyCount;
-        if (statCriticalEl) statCriticalEl.textContent = lateItems.length;
-
-        if (urgencyAlertBannerEl) {
-            if (lateItems.length > 0) {
-                const criticalCount = lateItems.filter(i => getUrgency(elapsedMinutesSince(i.createdAt)).level === 'critical').length;
-                urgencyAlertBannerEl.classList.remove('hidden');
-                urgencyBannerTitleEl.textContent = `${lateItems.length} dish${lateItems.length > 1 ? 'es' : ''} running late`;
-                urgencyBannerBodyEl.textContent = criticalCount > 0
-                    ? `${criticalCount} dish${criticalCount > 1 ? 'es are' : ' is'} over 30 minutes — serve these first before the customer gets frustrated.`
-                    : 'Prioritize these before customers get frustrated.';
-            } else {
-                urgencyAlertBannerEl.classList.add('hidden');
-            }
-        }
-    }
-
     function renderCard(item) {
         const itemElapsedSec = elapsedSecondsSince(item.createdAt);
         const urgency = getUrgency(Math.floor(itemElapsedSec / 60));
 
         let actionBtnHtml = '';
         if (item.status === 'placed') {
-            actionBtnHtml = `<button onclick="claimItem('${item.id}')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition active:scale-95 w-full mt-3"><i class="fas fa-hand-paper mr-1"></i> Claim</button>`;
-        } else if (item.status === 'claimed') {
-            actionBtnHtml = `<button onclick="updateStatus('${item.id}', 'preparing')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition active:scale-95 w-full mt-3"><i class="fas fa-fire mr-1"></i> Start Preparing</button>`;
-        } else if (item.status === 'preparing') {
-            actionBtnHtml = `<button onclick="updateStatus('${item.id}', 'ready')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition active:scale-95 w-full mt-3"><i class="fas fa-check-circle mr-1"></i> Mark Ready</button>`;
+            actionBtnHtml = `<button onclick="claimItem('${item.id}')" class="text-xs font-bold px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition active:scale-95 w-full mt-2"><i class="fas fa-fire mr-1"></i> Start Preparing</button>`;
+        } else if (item.status === 'claimed' || item.status === 'preparing') {
+            actionBtnHtml = `<button onclick="updateStatus('${item.id}', 'ready')" class="text-xs font-bold px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition active:scale-95 w-full mt-2"><i class="fas fa-check-circle mr-1"></i> Mark Ready</button>`;
         }
-
-        const statusBadgeHtml = item.status === 'placed'
-            ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase whitespace-nowrap">NEW</span>`
-            : item.status === 'claimed'
-            ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase whitespace-nowrap">${item.claimedBy || 'Chef'}</span>`
-            : `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 uppercase whitespace-nowrap">PREPARING</span>`;
 
         const timerHtml = `<div class="live-timer-wrap ${urgency.level}" data-created-at="${item.createdAt}"><i class="fas fa-stopwatch"></i> <span class="live-timer-value">${formatMMSS(itemElapsedSec)}</span></div>`;
 
         return `
             <div class="kanban-card urgency-${urgency.level}">
-                <div class="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                        <div class="font-bold text-sm text-white">${item.name} <span class="text-orange-400 font-black">×${item.qty}</span></div>
-                        <div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1.5 flex-wrap">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="font-bold text-sm text-white truncate">${item.name} <span class="text-orange-400 font-black">×${item.qty}</span></div>
+                        <div class="text-[10px] text-zinc-500 mt-0.5 flex items-center gap-1 flex-wrap">
                             <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold">T${item.tableNumber}</span>
                             <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold">${item.station}</span>
-                            <span>Rnd ${item.round_no || 1}</span>
                         </div>
                     </div>
                     ${statusBadgeHtml}
                 </div>
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                     ${timerHtml}
-                    <span class="urgency-tag ${urgency.level}">${urgency.label}</span>
                 </div>
+                ${item.note ? `<div class="text-[11px] text-amber-300/90 font-medium italic mt-1"><i class="fas fa-comment-dots mr-1"></i>"${item.note}"</div>` : ''}
                 ${actionBtnHtml}
             </div>
         `;
@@ -210,8 +159,6 @@
 
     function renderKanban() {
         const queueItems = window.FlameDineStore.getKitchenQueue(currentStationFilter);
-
-        refreshStatsAndBanner();
 
         const newItems = queueItems.filter(i => i.status === 'placed');
         const preparingItems = queueItems.filter(i => i.status === 'claimed' || i.status === 'preparing');
@@ -258,19 +205,13 @@
             if (card && !card.classList.contains('status-ready')) {
                 ['urgency-relaxed', 'urgency-medium', 'urgency-urgent', 'urgency-critical'].forEach(c => card.classList.remove(c));
                 card.classList.add('urgency-' + urgency.level);
-                const tag = card.querySelector('.urgency-tag');
-                if (tag) {
-                    tag.className = `urgency-tag ${urgency.level}`;
-                    tag.textContent = urgency.label;
-                }
             }
         });
-        refreshStatsAndBanner();
     }
 
     // Global Window Action Binds
     window.claimItem = function (itemId) {
-        const res = window.FlameDineStore.claimOrderItem(itemId, staffUser.name);
+        const res = window.FlameDineStore.updateOrderItemStatus(itemId, 'preparing', staffUser.name);
         if (!res.success) {
             alert(res.message);
         }
