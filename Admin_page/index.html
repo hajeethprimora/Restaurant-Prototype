@@ -158,13 +158,26 @@
         <!-- ========== BILLING ========== -->
         <section id="page-billing" class="page">
             <div class="page-header"><div><h1>Billing</h1><div class="sub">Tap a table to view its status and billing history</div></div><div class="actions"><button class="btn btn-outline"><i class="fas fa-download"></i> Export</button></div></div>
-            <div class="floor-legend">
-                <div class="legend-item"><span class="dot" style="background:#94a3b8;"></span> Available</div>
-                <div class="legend-item"><span class="dot" style="background:#f59e0b;"></span> Items ready</div>
-                <div class="legend-item"><span class="dot" style="background:#22c55e;"></span> All served</div>
-                <div class="legend-item"><span class="dot" style="background:#ef4444;"></span> Delayed</div>
+
+            <div class="billing-view-tabs">
+                <button class="billing-view-tab active" data-billing-view="table" onclick="setBillingView('table')"><i class="fas fa-border-all"></i> Table View</button>
+                <button class="billing-view-tab" data-billing-view="dish" onclick="setBillingView('dish')"><i class="fas fa-list-check"></i> Dish View</button>
             </div>
-            <div class="table-floor-grid" id="billingFloorGrid"></div>
+
+            <div id="billingTableView">
+                <div class="floor-legend">
+                    <div class="legend-item"><span class="dot" style="background:#94a3b8;"></span> Available</div>
+                    <div class="legend-item"><span class="dot" style="background:#f59e0b;"></span> Items ready</div>
+                    <div class="legend-item"><span class="dot" style="background:#22c55e;"></span> All served</div>
+                    <div class="legend-item"><span class="dot" style="background:#ef4444;"></span> Delayed</div>
+                </div>
+                <div class="table-floor-grid" id="billingFloorGrid"></div>
+            </div>
+
+            <div id="billingDishView" class="hidden">
+                <div class="dish-kanban-board" id="billingDishKanbanBoard"></div>
+                <div id="billingDishKanbanEmpty" class="empty-state hidden">No active dishes right now.</div>
+            </div>
         </section>
 
         <!-- ========== BILLING HISTORY ========== -->

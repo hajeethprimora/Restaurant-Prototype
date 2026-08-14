@@ -358,7 +358,6 @@
                     </div>
                     ${STATUS_TAGS[item.status] || ''}
                 </div>
-                ${item.note ? `<div class="text-xs text-amber-300/90 font-medium italic mb-2"><i class="fas fa-comment-dots mr-1"></i>"${item.note}"</div>` : ''}
                 ${actionBtnHtml}
             </div>
         `;
@@ -369,9 +368,6 @@
         const query = floorSearchQuery.toLowerCase();
         const filtered = query ? allItems.filter(i => String(i.tableNumber).includes(query)) : allItems;
 
-        const preparingItems = filtered
-            .filter(i => ['placed', 'claimed', 'preparing'].includes(i.status))
-            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         const readyItems = filtered
             .filter(i => i.status === 'ready')
             .sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
@@ -379,7 +375,7 @@
             .filter(i => i.status === 'picked_up')
             .sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
 
-        const total = preparingItems.length + readyItems.length + pickedUpItems.length;
+        const total = readyItems.length + pickedUpItems.length;
         if (emptyDishKanbanEl) emptyDishKanbanEl.classList.toggle('hidden', total > 0);
         if (total === 0) {
             dishKanbanBoardEl.innerHTML = '';
@@ -387,10 +383,6 @@
         }
 
         const columns = [
-            {
-                title: 'Preparing', icon: 'fa-fire', color: 'amber', items: preparingItems,
-                render: item => dishKanbanCard(item, '')
-            },
             {
                 title: 'Ready for Pickup', icon: 'fa-bell', color: 'emerald', items: readyItems,
                 render: item => dishKanbanCard(item, `<button onclick="updateStatus('${item.id}', 'picked_up')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition active:scale-95 w-full mt-1"><i class="fas fa-hand-holding mr-1"></i> Pick Up</button>`)

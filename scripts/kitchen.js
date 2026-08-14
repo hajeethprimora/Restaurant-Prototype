@@ -199,7 +199,6 @@
                     </div>
                     ${statusBadgeHtml}
                 </div>
-                ${item.note ? `<div class="text-xs text-amber-300/90 font-medium italic mb-2"><i class="fas fa-comment-dots mr-1"></i>"${item.note}"</div>` : ''}
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                     ${timerHtml}
                     <span class="urgency-tag ${urgency.level}">${urgency.label}</span>

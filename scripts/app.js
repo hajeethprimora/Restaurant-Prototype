@@ -16,6 +16,17 @@
         let itemSheetItemId = null;
         let itemSheetQtyVal = 1;
 
+        // Table 5's session in the shared store is pre-seeded with demo data for the
+        // kitchen/server dashboards. It must not be mistaken for an order this customer
+        // actually placed, so the order-tracker UI stays gated behind this session flag.
+        const HAS_ORDERED_KEY = 'flame_dine_has_ordered_t5';
+        function hasPlacedOrderThisSession() {
+            return sessionStorage.getItem(HAS_ORDERED_KEY) === '1';
+        }
+        function markOrderPlacedThisSession() {
+            sessionStorage.setItem(HAS_ORDERED_KEY, '1');
+        }
+
         // =============================================================
         // DOM REFS
         // =============================================================
@@ -49,7 +60,6 @@
         const itemSheetPrice = $('itemSheetPrice');
         const itemSheetImg = $('itemSheetImg');
         const itemSheetQty = $('itemSheetQty');
-        const itemNote = $('itemNote');
         const headerOrderTracker = $('headerOrderTracker');
 
         // Buttons
@@ -239,7 +249,6 @@
             itemSheetDesc.textContent = item.desc;
             itemSheetPrice.textContent = '₹' + item.price;
             itemSheetQty.textContent = itemSheetQtyVal;
-            itemNote.value = '';
             const imgUrl = getLocalImagePath(item);
             itemSheetImg.src = imgUrl;
             itemSheetImg.onerror = function() {
@@ -274,8 +283,7 @@
             if (existing) {
                 existing.qty += itemSheetQtyVal;
             } else {
-                const note = itemNote.value || '';
-                cart.push({ ...item, qty: itemSheetQtyVal, note: note });
+                cart.push({ ...item, qty: itemSheetQtyVal });
             }
             closeItemSheet();
             updateCartUI();
@@ -296,7 +304,7 @@
             if (existing) {
                 existing.qty += 1;
             } else {
-                cart.push({ ...item, qty: 1, note: '' });
+                cart.push({ ...item, qty: 1 });
             }
             updateCartUI();
 
@@ -367,7 +375,7 @@
                         </div>
                         <div class="item-info">
                             <div class="name">${item.name}</div>
-                            <div class="meta">₹${item.price} <span class="note">${item.note ? '· ' + item.note : ''}</span></div>
+                            <div class="meta">₹${item.price}</div>
                         </div>
                         <div class="item-right">
                             <div class="qty-ctrl-premium">
@@ -435,6 +443,7 @@
             const orderId = res.order.orderCode;
             const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
 
+            markOrderPlacedThisSession();
             currentOrder = {
                 id: orderId,
                 items: res.newItems,
@@ -556,7 +565,11 @@
         }
 
         function updateHeaderOrderTracker() {
-            headerOrderTracker.style.display = 'flex'; // Permanent!
+            if (!currentOrder) {
+                headerOrderTracker.style.display = 'none';
+                return;
+            }
+            headerOrderTracker.style.display = 'flex';
             headerOrderTracker.className = 'header-tracker-btn';
             headerOrderTracker.innerHTML = `<span class="btn-label">Orders</span>`;
         }
@@ -707,6 +720,7 @@
         // REAL-TIME STORE SUBSCRIPTION
         // =============================================================
         window.FlameDineStore.subscribe(event => {
+            if (!hasPlacedOrderThisSession()) return;
             const session = window.FlameDineStore.getOpenSessionForTable(5);
             if (session) {
                 const order = window.FlameDineStore.getOrderForSession(session.id);
@@ -725,11 +739,13 @@
         // =============================================================
         // INIT
         // =============================================================
-        const initialSession = window.FlameDineStore.getOpenSessionForTable(5);
-        if (initialSession) {
-            const order = window.FlameDineStore.getOrderForSession(initialSession.id);
-            const items = window.FlameDineStore.getOrderItemsForSession(initialSession.id);
-            currentOrder = { id: order ? order.orderCode : 'FL-1042', items, total: items.reduce((s, i) => s + i.price * i.qty, 0) };
+        if (hasPlacedOrderThisSession()) {
+            const initialSession = window.FlameDineStore.getOpenSessionForTable(5);
+            if (initialSession) {
+                const order = window.FlameDineStore.getOrderForSession(initialSession.id);
+                const items = window.FlameDineStore.getOrderItemsForSession(initialSession.id);
+                currentOrder = { id: order ? order.orderCode : 'FL-1042', items, total: items.reduce((s, i) => s + i.price * i.qty, 0) };
+            }
         }
         updateHeaderOrderTracker();
         showPage('landing');
